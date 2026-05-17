@@ -1,0 +1,2 @@
+Ma stack recommandée (V1 optimisée)
+CoucheChoixPourquoiCMSStrapi v5Gardé, c'est le bon choixDBPostgreSQLGardéFrontendNext.js 14 (App Router)GardéUITailwind + shadcn/uiRemplace Tailwind seul — composants prêts (tables, modals, charts)ChartsRechartsIntégré Next.js, zéro service externeAuthStrapi JWT + NextAuthGestion rôles côté Next.js aussiPDFReact-PDFFiches clients en PDF

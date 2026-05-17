@@ -1,0 +1,383 @@
+Voici le **cahier des charges V1 complet adapté à Strapi (CMS headless)** pour ton application d’évaluation et de scoring en contexte fiscal.
+
+---
+
+# 📘 CAHIER DES CHARGES V1 (STRAPI)
+
+## Plateforme d’évaluation et scoring client – Domaine fiscal
+
+---
+
+# 1. Présentation du projet
+
+## 1.1 Nom du projet
+
+**FiscalScore V1 – Système d’évaluation client basé sur Strapi**
+
+---
+
+## 1.2 Objectif
+
+Mettre en place une première version fonctionnelle permettant :
+
+* la gestion des clients
+* la création de questionnaires
+* la saisie d’évaluations avec scores et commentaires
+* le calcul de score côté frontend
+* la génération d’une fiche client
+* la gestion des accès via Strapi (rôles et permissions)
+
+👉 Cette V1 sert de **MVP (produit minimum viable)**.
+
+---
+
+# 2. Architecture technique
+
+```text id="arch_v1_strapi"
+Frontend (Next.js / React)
+        ↓
+Strapi CMS (API REST/GraphQL)
+        ↓
+PostgreSQL (ou SQLite en dev)
+```
+
+---
+
+## 2.1 Stack recommandée
+
+* [Strapi](https://strapi.io?utm_source=chatgpt.com) (backend CMS + API)
+* [Next.js](https://nextjs.org?utm_source=chatgpt.com) (frontend)
+* [PostgreSQL](https://www.postgresql.org?utm_source=chatgpt.com) (base de données)
+
+---
+
+# 3. Rôles et accès (Strapi natif)
+
+## 3.1 Rôles
+
+| Rôle               | Permissions      |
+| ------------------ | ---------------- |
+| Admin              | Accès total CMS  |
+| Agent              | CRUD évaluations |
+| Superviseur        | Lecture seule    |
+| Authenticated user | accès limité     |
+
+---
+
+## 3.2 Sécurité
+
+* Authentification JWT Strapi
+* Gestion des permissions par collection
+* Protection des endpoints
+
+---
+
+## 3.3 Accès avancé (important)
+
+👉 Certaines données sensibles peuvent être :
+
+* cachées par défaut
+* accessibles uniquement via rôle Admin
+
+✔ Pas de mot de passe admin externe dans cette V1
+✔ Tout passe par Strapi permissions
+
+---
+
+# 4. Modèle de données (Collections Strapi)
+
+---
+
+# 4.1 Collection : Clients
+
+## Objectif
+
+Stocker les clients évalués
+
+| Champ              | Type                           |
+| ------------------ | ------------------------------ |
+| nom                | string                         |
+| prénom             | string                         |
+| identifiant_fiscal | string                         |
+| email              | email                          |
+| téléphone          | string                         |
+| adresse            | text                           |
+| statut             | enum (actif / risque / bloqué) |
+
+---
+
+# 4.2 Collection : Questionnaires
+
+| Champ       | Type   |
+| ----------- | ------ |
+| titre       | string |
+| description | text   |
+
+---
+
+# 4.3 Collection : Questions
+
+| Champ         | Type                   |
+| ------------- | ---------------------- |
+| texte         | string                 |
+| catégorie     | string                 |
+| coefficient   | number                 |
+| score_max     | number                 |
+| questionnaire | relation (many-to-one) |
+
+---
+
+# 4.4 Collection : Evaluations
+
+👉 C’est le cœur du système
+
+| Champ         | Type              |
+| ------------- | ----------------- |
+| client        | relation (client) |
+| questionnaire | relation          |
+| score_total   | number            |
+| appreciation  | string            |
+| date          | datetime          |
+
+---
+
+# 4.5 Collection : Réponses
+
+| Champ       | Type     |
+| ----------- | -------- |
+| evaluation  | relation |
+| question    | relation |
+| score       | number   |
+| commentaire | text     |
+
+---
+
+# 4.6 Collection : Logs (optionnel mais conseillé)
+
+| Champ       | Type     |
+| ----------- | -------- |
+| utilisateur | relation |
+| action      | string   |
+| cible       | string   |
+| date        | datetime |
+
+---
+
+# 5. Logique métier (frontend)
+
+👉 Strapi stocke les données
+👉 Le frontend fait les calculs
+
+---
+
+## 5.1 Formule de score
+
+Score = \frac{\sum (note \times coefficient)}{\sum coefficients}
+
+---
+
+## 5.2 Interprétation
+
+| Score  | Profil fiscal   |
+| ------ | --------------- |
+| 0–20   | Risque critique |
+| 21–40  | Risque élevé    |
+| 41–60  | Moyen           |
+| 61–80  | Bon             |
+| 81–100 | Excellent       |
+
+---
+
+# 6. Fonctionnalités V1
+
+---
+
+# 6.1 Gestion clients
+
+* création
+* modification
+* suppression
+* recherche
+
+---
+
+# 6.2 Gestion questionnaires
+
+* création
+* ajout questions
+* structuration par catégories
+
+---
+
+# 6.3 Système d’évaluation
+
+* sélection client
+* choix questionnaire
+* saisie réponses
+* ajout commentaires
+
+---
+
+# 6.4 Calcul de score (frontend)
+
+* calcul automatique
+* affichage résultat
+* classification
+
+---
+
+# 6.5 Fiche client
+
+* affichage résumé
+* export PDF (frontend)
+* historique évaluations
+
+---
+
+# 6.6 Dashboard
+
+* total clients
+* clients à risque
+* moyenne des scores
+* graphiques simples
+
+---
+
+# 7. Flux utilisateur
+
+```text id="flow_v1_strapi"
+Login Strapi
+      ↓
+Sélection client
+      ↓
+Choix questionnaire
+      ↓
+Saisie réponses + commentaires
+      ↓
+Récupération données API Strapi
+      ↓
+Calcul score frontend
+      ↓
+Affichage résultat
+      ↓
+Génération fiche PDF
+```
+
+---
+
+# 8. Sécurité
+
+## 8.1 Strapi gère :
+
+* JWT auth
+* rôles
+* permissions API
+
+---
+
+## 8.2 Recommandations
+
+* limiter accès API publique
+* activer HTTPS
+* protéger admin panel Strapi
+* logs activés
+
+---
+
+# 9. Contraintes techniques
+
+* application responsive
+* API sécurisée
+* structure modulaire
+* évolutivité vers IA (V2)
+* performance correcte même avec 1000+ clients
+
+---
+
+# 10. Livrables
+
+* instance Strapi configurée
+* schéma de base de données
+* frontend React/Next.js
+* système de scoring
+* génération PDF
+* documentation technique
+
+---
+
+# 11. Limites de la V1
+
+❌ pas d’IA
+❌ pas de scoring prédictif avancé
+❌ logique métier côté frontend
+❌ pas d’automatisation fiscale avancée
+
+---
+
+# 12. Évolutions prévues (V2)
+
+* backend custom (Node/Laravel)
+* IA de scoring fiscal
+* détection de fraude
+* audit avancé
+* API externe fiscale
+* workflow validation multi-niveaux
+
+---
+
+# 13. Conseils importants (très utile pour ton cas fiscal)
+
+## 1. Structure propre dès Strapi
+
+Ne mélange pas :
+
+* questions
+* réponses
+* évaluations
+
+👉 sinon ton système sera difficile à faire évoluer
+
+---
+
+## 2. Toujours prévoir audit
+
+Même en V1 :
+
+* logs
+* historique
+* traçabilité
+
+---
+
+## 3. Ne fais pas trop de logique dans Strapi
+
+Strapi = stockage + API
+Frontend = calcul + logique métier
+
+---
+
+## 4. Prépare la V2 dès maintenant
+
+Même si tu fais V1 simple :
+
+* pense “scalabilité fiscale”
+* pense “contrôle et audit”
+
+---
+
+# Conclusion
+
+Cette V1 avec Strapi te permet de :
+
+* livrer rapidement un produit fonctionnel
+* tester ton système de scoring fiscal
+* montrer un prototype sérieux à un client
+* poser une base solide pour une V2 professionnelle
+
+---
+
+Si tu veux, je peux maintenant te faire :
+
+* le **schéma Strapi exact (collections + relations prêt à reproduire)**
+* ou le **frontend Next.js connecté à Strapi**
+* ou même un **dashboard UI complet type fiscal (très pro)**

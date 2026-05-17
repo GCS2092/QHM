@@ -1,0 +1,246 @@
+# 📘 FiscalScore — Guide de démarrage
+
+Plateforme d'évaluation, scoring et analyse fiscale client.
+
+---
+
+## 🗂️ Structure du projet
+
+```
+C:\QHM\
+├── fiscalscore-cms\       → Backend CMS (Strapi v5)
+└── fiscalscore-app\       → Frontend (Next.js 14)
+```
+
+---
+
+## ⚙️ Prérequis
+
+| Outil | Version | Vérification |
+|---|---|---|
+| Node.js | >= 18 | `node -v` |
+| npm | >= 9 | `npm -v` |
+| PostgreSQL | >= 14 | `psql --version` |
+
+---
+
+## 🗄️ PostgreSQL — Configuration
+
+### 1. Lancer PostgreSQL (si pas démarré)
+
+```powershell
+# Démarrer le service PostgreSQL (Windows)
+net start postgresql-x64-17
+# (adapte le nom selon ta version installée)
+```
+
+### 2. Se connecter à PostgreSQL
+
+```powershell
+psql -U postgres
+```
+
+### 3. Créer la base de données (si pas encore fait)
+
+```sql
+CREATE DATABASE fiscalscore;
+\q
+```
+
+---
+
+## 🚀 Lancer le projet
+
+> ⚠️ Il faut **2 terminaux PowerShell** ouverts en même temps.
+
+---
+
+### Terminal 1 — Strapi (CMS Backend)
+
+```powershell
+cd C:\QHM\fiscalscore-cms
+npm run develop
+```
+
+✅ Strapi sera accessible sur : **http://localhost:1337/admin**
+
+---
+
+### Terminal 2 — Next.js (Frontend)
+
+```powershell
+cd C:\QHM\fiscalscore-app
+npm run dev
+```
+
+✅ L'app sera accessible sur : **http://localhost:3000**
+
+---
+
+## 🌐 URLs importantes
+
+| Service | URL | Description |
+|---|---|---|
+| Next.js App | http://localhost:3000 | Interface principale |
+| Strapi Admin | http://localhost:1337/admin | Panneau CMS |
+| Strapi API | http://localhost:1337/api | API REST |
+
+---
+
+## 📦 Stack technique
+
+| Couche | Technologie |
+|---|---|
+| CMS / Backend | Strapi v5 |
+| Base de données | PostgreSQL |
+| Frontend | Next.js 14 (App Router) |
+| UI | Tailwind CSS + shadcn/ui |
+| Charts | Recharts |
+| PDF Export | React-PDF |
+| State / Fetch | TanStack Query + Axios |
+| Auth | NextAuth.js |
+
+---
+
+## 🔧 Commandes utiles
+
+### Strapi
+
+```powershell
+# Démarrer en mode développement (avec hot reload)
+cd C:\QHM\fiscalscore-cms
+npm run develop
+
+# Démarrer en mode production
+npm run start
+
+# Build du panel admin
+npm run build
+
+# Injecter les données d'exemple
+npm run seed:example
+```
+
+### Next.js
+
+```powershell
+# Démarrer en mode développement
+cd C:\QHM\fiscalscore-app
+npm run dev
+
+# Build production
+npm run build
+
+# Démarrer en mode production
+npm run start
+
+# Vérifier le lint
+npm run lint
+```
+
+### Ajouter des composants shadcn/ui
+
+```powershell
+cd C:\QHM\fiscalscore-app
+npx shadcn@latest add [nom-du-composant]
+
+# Exemples :
+npx shadcn@latest add select
+npx shadcn@latest add tabs
+npx shadcn@latest add toast
+npx shadcn@latest add dropdown-menu
+```
+
+---
+
+## 📁 Variables d'environnement
+
+### Strapi — `fiscalscore-cms\.env`
+
+```env
+HOST=0.0.0.0
+PORT=1337
+APP_KEYS=...               # auto-généré
+API_TOKEN_SALT=...         # auto-généré
+ADMIN_JWT_SECRET=...       # auto-généré
+JWT_SECRET=...             # auto-généré
+
+# PostgreSQL
+DATABASE_CLIENT=postgres
+DATABASE_HOST=127.0.0.1
+DATABASE_PORT=5432
+DATABASE_NAME=fiscalscore
+DATABASE_USERNAME=postgres
+DATABASE_PASSWORD=p*
+DATABASE_SSL=false
+```
+
+### Next.js — `fiscalscore-app\.env.local` (à créer)
+
+```env
+NEXT_PUBLIC_STRAPI_URL=http://localhost:1337
+NEXTAUTH_SECRET=ton-secret-ici
+NEXTAUTH_URL=http://localhost:3000
+```
+
+---
+
+## 🔐 Premier démarrage Strapi
+
+1. Aller sur **http://localhost:1337/admin**
+2. Créer ton compte administrateur
+3. Configurer les **Content Types** (collections) :
+   - Clients
+   - Questionnaires
+   - Questions
+   - Evaluations
+   - Reponses
+
+---
+
+## 🛠️ Dépannage
+
+### Strapi ne démarre pas
+
+```powershell
+# Vérifier que PostgreSQL tourne
+net start postgresql-x64-17
+
+# Vérifier la connexion DB
+psql -U postgres -d fiscalscore
+```
+
+### Port déjà utilisé
+
+```powershell
+# Voir quel process utilise le port 1337
+netstat -ano | findstr :1337
+
+# Tuer le process (remplace XXXX par le PID)
+taskkill /PID XXXX /F
+```
+
+### Réinstaller les dépendances
+
+```powershell
+# Strapi
+cd C:\QHM\fiscalscore-cms
+Remove-Item -Recurse -Force node_modules
+npm install
+
+# Next.js
+cd C:\QHM\fiscalscore-app
+Remove-Item -Recurse -Force node_modules
+npm install
+```
+
+---
+
+## 📌 Rappel important
+
+> Ne jamais commiter le fichier `.env` sur Git.
+> Il contient les mots de passe et secrets de l'application.
+
+---
+
+*FiscalScore — Plateforme d'évaluation fiscale client*
