@@ -9,7 +9,7 @@ export default function ClientCard({ client }: { client: Client }) {
     <div className="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-sm transition">
       <div className="flex items-center gap-3 mb-4">
         <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-          {client.prenom[0]}{client.nom[0]}
+          {(client.prenom ?? "?")[0]}{(client.nom ?? "?")[0]}
         </div>
         <div>
           <p className="font-semibold text-gray-900">{client.prenom} {client.nom}</p>
