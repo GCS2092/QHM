@@ -90,9 +90,9 @@ export async function getDashboardSummary() {
   ]);
 
   const evaluations = evaluationsRes.data || [];
-  const scores = evaluations.map((item: any) => Number(item.attributes.score ?? 0));
-  const averageScore = scores.length > 0 ? Math.round(scores.reduce((acc, score) => acc + score, 0) / scores.length) : 0;
-  const conformesCount = scores.filter((score) => score >= 80).length;
+  const scores: number[] = evaluations.map((item: any) => Number(item.attributes.score ?? 0));
+  const averageScore = scores.length > 0 ? Math.round(scores.reduce((acc: number, score: number) => acc + score, 0) / scores.length) : 0;
+  const conformesCount = scores.filter((score: number) => score >= 80).length;
 
   const riskMap = new Map<number, { nom: string; score: number; alerte: string }>();
   const monthlyStats = new Map<string, { label: string; total: number; count: number }>();
