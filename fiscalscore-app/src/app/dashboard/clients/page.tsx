@@ -19,14 +19,14 @@ export default function ClientsPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const filtered = useMemo(
-    () => clients.filter((c) =>
-      c.nom.toLowerCase().includes(search.toLowerCase()) ||
-      c.prenom.toLowerCase().includes(search.toLowerCase()) ||
-      c.identifiantFiscal.toLowerCase().includes(search.toLowerCase())
-    ),
-    [clients, search]
-  );
+ const filtered = useMemo(
+  () => clients.filter((c) =>
+    (c.nom ?? "").toLowerCase().includes(search.toLowerCase()) ||
+    (c.prenom ?? "").toLowerCase().includes(search.toLowerCase()) ||
+    (c.identifiantFiscal ?? "").toLowerCase().includes(search.toLowerCase())
+  ),
+  [clients, search]
+);
 
   return (
     <div className="space-y-6">
