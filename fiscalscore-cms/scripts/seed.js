@@ -3,7 +3,7 @@
 const fs = require('fs-extra');
 const path = require('path');
 const mime = require('mime-types');
-const { categories, authors, articles, global, about } = require('../data/data.json');
+const { categories, authors, articles, global, about, clients, questionnaires, questions, evaluations } = require('../data/data.json');
 
 async function seedExampleApp() {
   const shouldImportSeedData = await isFirstRun();
@@ -236,6 +236,30 @@ async function importAuthors() {
   }
 }
 
+async function importClients() {
+  for (const client of clients) {
+    await createEntry({ model: 'client', entry: client });
+  }
+}
+
+async function importQuestionnaires() {
+  for (const questionnaire of questionnaires) {
+    await createEntry({ model: 'questionnaire', entry: questionnaire });
+  }
+}
+
+async function importQuestions() {
+  for (const question of questions) {
+    await createEntry({ model: 'question', entry: question });
+  }
+}
+
+async function importEvaluations() {
+  for (const evaluation of evaluations) {
+    await createEntry({ model: 'evaluation', entry: evaluation });
+  }
+}
+
 async function importSeedData() {
   // Allow read of application content types
   await setPublicPermissions({
@@ -244,11 +268,19 @@ async function importSeedData() {
     author: ['find', 'findOne'],
     global: ['find', 'findOne'],
     about: ['find', 'findOne'],
+    client: ['find', 'findOne'],
+    questionnaire: ['find', 'findOne'],
+    question: ['find', 'findOne'],
+    evaluation: ['find', 'findOne', 'create'],
   });
 
   // Create all entries
   await importCategories();
   await importAuthors();
+  await importClients();
+  await importQuestionnaires();
+  await importQuestions();
+  await importEvaluations();
   await importArticles();
   await importGlobal();
   await importAbout();

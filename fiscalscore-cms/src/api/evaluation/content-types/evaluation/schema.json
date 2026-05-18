@@ -1,0 +1,44 @@
+{
+  "kind": "collectionType",
+  "collectionName": "evaluations",
+  "info": {
+    "singularName": "evaluation",
+    "pluralName": "evaluations",
+    "displayName": "Evaluation",
+    "description": "Fiscal evaluation record"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "score": {
+      "type": "integer",
+      "required": true,
+      "default": 0
+    },
+    "date": {
+      "type": "date",
+      "required": true
+    },
+    "evaluateur": {
+      "type": "string",
+      "required": true
+    },
+    "commentaire": {
+      "type": "text"
+    },
+    "client": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::client.client",
+      "inversedBy": "evaluations"
+    },
+    "questionnaire": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::questionnaire.questionnaire",
+      "inversedBy": "evaluations"
+    }
+  }
+}

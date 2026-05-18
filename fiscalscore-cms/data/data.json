@@ -237,5 +237,180 @@
         }
       ]
     }
+  ],
+  "clients": [
+    {
+      "nom": "Diallo",
+      "prenom": "Mamadou",
+      "identifiantFiscal": "SN-2021-00123",
+      "email": "mamadou.diallo@example.com",
+      "telephone": "+221771234567",
+      "score": 82,
+      "statut": "Bon"
+    },
+    {
+      "nom": "Ndiaye",
+      "prenom": "Fatou",
+      "identifiantFiscal": "SN-2020-00456",
+      "email": "fatou.ndiaye@example.com",
+      "telephone": "+221762345678",
+      "score": 45,
+      "statut": "Risque élevé"
+    },
+    {
+      "nom": "Sow",
+      "prenom": "Ibrahima",
+      "identifiantFiscal": "SN-2019-00789",
+      "email": "ibrahima.sow@example.com",
+      "telephone": "+221703456789",
+      "score": 18,
+      "statut": "Critique"
+    },
+    {
+      "nom": "Ba",
+      "prenom": "Aminata",
+      "identifiantFiscal": "SN-2022-00321",
+      "email": "aminata.ba@example.com",
+      "telephone": "+221784567890",
+      "score": 71,
+      "statut": "Bon"
+    },
+    {
+      "nom": "Cisse",
+      "prenom": "Omar",
+      "identifiantFiscal": "SN-2021-00654",
+      "email": "omar.cisse@example.com",
+      "telephone": "+221775678901",
+      "score": 35,
+      "statut": "Risque élevé"
+    }
+  ],
+  "questionnaires": [
+    {
+      "titre": "Conformite fiscale generale",
+      "description": "Evaluation generale du respect des obligations fiscales.",
+      "actif": true
+    },
+    {
+      "titre": "Ponctualite des declarations",
+      "description": "Contrôle des delais de depots et paiements.",
+      "actif": true
+    },
+    {
+      "titre": "Transparence financiere",
+      "description": "Analyse de la documentation financiere et de la traçabilité.",
+      "actif": false
+    },
+    {
+      "titre": "Historique de paiement",
+      "description": "Examen des paiements et des retards de paiement.",
+      "actif": true
+    }
+  ],
+  "questions": [
+    {
+      "texte": "Declarations deposees dans les delais ?",
+      "coefficient": 2,
+      "questionnaire": {
+        "id": 1
+      }
+    },
+    {
+      "texte": "Documents fiscaux bien organises ?",
+      "coefficient": 1,
+      "questionnaire": {
+        "id": 1
+      }
+    },
+    {
+      "texte": "Ecritures comptables conformes ?",
+      "coefficient": 2,
+      "questionnaire": {
+        "id": 1
+      }
+    },
+    {
+      "texte": "Declarations envoyees avant la date limite ?",
+      "coefficient": 2,
+      "questionnaire": {
+        "id": 2
+      }
+    },
+    {
+      "texte": "Amendes payees rapidement ?",
+      "coefficient": 1,
+      "questionnaire": {
+        "id": 2
+      }
+    },
+    {
+      "texte": "Flux bancaires documentes ?",
+      "coefficient": 1,
+      "questionnaire": {
+        "id": 3
+      }
+    }
+  ],
+  "evaluations": [
+    {
+      "client": {
+        "id": 1
+      },
+      "questionnaire": {
+        "id": 1
+      },
+      "score": 82,
+      "date": "2026-05-10",
+      "evaluateur": "Agent Kone",
+      "commentaire": "Bonne adherence globale aux obligations fiscales."
+    },
+    {
+      "client": {
+        "id": 2
+      },
+      "questionnaire": {
+        "id": 2
+      },
+      "score": 45,
+      "date": "2026-05-09",
+      "evaluateur": "Agent Sy",
+      "commentaire": "Retards sur plusieurs declarations fiscales."
+    },
+    {
+      "client": {
+        "id": 3
+      },
+      "questionnaire": {
+        "id": 3
+      },
+      "score": 18,
+      "date": "2026-05-08",
+      "evaluateur": "Agent Kone",
+      "commentaire": "Problemes severes de transparence financiere."
+    },
+    {
+      "client": {
+        "id": 4
+      },
+      "questionnaire": {
+        "id": 4
+      },
+      "score": 71,
+      "date": "2026-05-07",
+      "evaluateur": "Agent Diop",
+      "commentaire": "Historique de paiement correct, quelques ajustements recommends."
+    },
+    {
+      "client": {
+        "id": 5
+      },
+      "questionnaire": {
+        "id": 1
+      },
+      "score": 35,
+      "date": "2026-05-06",
+      "evaluateur": "Agent Sy",
+      "commentaire": "Faible conformité fiscale, actions urgentes necessaires."
+    }
   ]
 }

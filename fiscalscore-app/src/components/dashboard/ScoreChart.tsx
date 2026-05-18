@@ -1,19 +1,30 @@
 ﻿"use client";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
-const data = [
-  { mois: "Jan", score: 58 }, { mois: "Fev", score: 62 }, { mois: "Mar", score: 55 },
-  { mois: "Avr", score: 70 }, { mois: "Mai", score: 67 }, { mois: "Jun", score: 74 },
-  { mois: "Jul", score: 71 }, { mois: "Aou", score: 78 }, { mois: "Sep", score: 73 },
-  { mois: "Oct", score: 80 }, { mois: "Nov", score: 76 }, { mois: "Dec", score: 82 },
-];
+type ScorePoint = { mois: string; score: number };
 
-export default function ScoreChart() {
+interface ScoreChartProps {
+  data: ScorePoint[];
+}
+
+export default function ScoreChart({ data }: ScoreChartProps) {
+  if (!data || data.length === 0) {
+    return (
+      <div className="bg-white rounded-xl border border-gray-100 p-5">
+        <div className="mb-4">
+          <h3 className="font-semibold text-gray-900">Evolution du score moyen</h3>
+          <p className="text-xs text-gray-400 mt-0.5">Aucune donnée d'évaluation disponible</p>
+        </div>
+        <div className="h-56 flex items-center justify-center text-sm text-gray-500">Pas encore de scores en base</div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-xl border border-gray-100 p-5">
       <div className="mb-4">
         <h3 className="font-semibold text-gray-900">Evolution du score moyen</h3>
-        <p className="text-xs text-gray-400 mt-0.5">Score moyen sur 12 mois</p>
+        <p className="text-xs text-gray-400 mt-0.5">Score moyen par mois</p>
       </div>
       <ResponsiveContainer width="100%" height={220}>
         <AreaChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
@@ -25,7 +36,7 @@ export default function ScoreChart() {
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
           <XAxis dataKey="mois" tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
-          <YAxis domain={[40, 100]} tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
+          <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
           <Tooltip contentStyle={{ borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "12px" }}
             formatter={(value) => [`${value}/100`, "Score moyen"]} />
           <Area type="monotone" dataKey="score" stroke="#2563eb" strokeWidth={2}
