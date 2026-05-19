@@ -72,8 +72,8 @@ export async function getEvaluations(): Promise<Evaluation[]> {
 export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
   const [clientsRes, evaluationsRes, questionnairesRes] = await Promise.all([
     strapiGet('/clients', { fields: 'id' }),
-    strapiGet('/evaluations', { populate: 'client,questionnaire', sort: 'date:desc' }),
-    strapiGet('/questionnaires', { fields: 'id,actif' }),
+    strapiGet('/evaluations', { 'populate[0]': 'client', 'populate[1]': 'questionnaire', sort: 'date:desc' }),
+    strapiGet('/questionnaires', { 'fields[0]': 'id', 'fields[1]': 'actif' }),
   ]);
 
   const evaluations = evaluationsRes.data || [];
