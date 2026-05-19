@@ -38,3 +38,15 @@ export interface Question {
     titre?: string;
   };
 }
+
+export interface AnalyticsSummary {
+  totalClients: number;
+  totalEvaluations: number;
+  totalQuestionnaires: number;
+  activeQuestionnaires: number;
+  inactiveQuestionnaires: number;
+  averageScore: number;
+  conformesCount: number;
+  risks: Array<{ nom: string; score: number; alerte: string }>;
+  scoreSeries: Array<{ mois: string; score: number }>;
+}
