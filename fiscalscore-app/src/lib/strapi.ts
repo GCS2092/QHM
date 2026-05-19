@@ -3,17 +3,18 @@
 type StrapiParams = Record<string, string | number | boolean | Array<string | number | boolean>>;
 
 function buildStrapiUrl(path: string, params?: StrapiParams) {
-  const url = new URL(`${STRAPI_URL}/api${path}`);
-  if (params) {
-    for (const [key, value] of Object.entries(params)) {
-      if (Array.isArray(value)) {
-        value.forEach((item) => url.searchParams.append(key, String(item)));
-      } else {
-        url.searchParams.append(key, String(value));
-      }
+  const base = `${STRAPI_URL}/api${path}`;
+  if (!params || Object.keys(params).length === 0) return base;
+
+  const parts: string[] = [];
+  for (const [key, value] of Object.entries(params)) {
+    if (Array.isArray(value)) {
+      value.forEach((item) => parts.push(`${key}=${encodeURIComponent(String(item))}`));
+    } else {
+      parts.push(`${key}=${encodeURIComponent(String(value))}`);
     }
   }
-  return url.toString();
+  return `${base}?${parts.join('&')}`;
 }
 
 export async function strapiGet(path: string, params?: StrapiParams, token?: string) {
