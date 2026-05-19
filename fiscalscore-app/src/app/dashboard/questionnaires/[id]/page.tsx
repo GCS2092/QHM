@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { getQuestionnaireById } from "@/lib/api";
 import type { Questionnaire } from "@/lib/types";
+import QuestionnairePdfExport from "@/components/questionnaires/QuestionnairePdfExport";
 
 type QuestionnairePageProps = {
   params: { id: string };
@@ -29,9 +31,17 @@ export default async function QuestionnaireDetailPage({ params }: QuestionnaireP
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">{questionnaire.titre ?? 'Questionnaire sans titre'}</h1>
-        <p className="text-sm text-gray-500 mt-1">{questionnaire.description ?? 'Aucune description disponible'}</p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">{questionnaire.titre ?? 'Questionnaire sans titre'}</h1>
+          <p className="text-sm text-gray-500 mt-1">{questionnaire.description ?? 'Aucune description disponible'}</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link href={`/dashboard/questionnaires/${questionnaire.id}/edit`} className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition">
+            Modifier
+          </Link>
+          <QuestionnairePdfExport questionnaire={questionnaire} />
+        </div>
       </div>
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-3xl border border-gray-100 bg-white p-8 shadow-sm">

@@ -41,6 +41,31 @@ export async function strapiPost(path: string, data: unknown, token?: string) {
   return res.json();
 }
 
+export async function strapiPut(path: string, data: unknown, token?: string) {
+  const res = await fetch(`${STRAPI_URL}/api${path}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    body: JSON.stringify({ data }),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Strapi PUT error: ${res.status} ${res.statusText} - ${text}`);
+  }
+  return res.json();
+}
+
+export async function strapiDelete(path: string, token?: string) {
+  const res = await fetch(`${STRAPI_URL}/api${path}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Strapi DELETE error: ${res.status} ${res.statusText} - ${text}`);
+  }
+  return res.json();
+}
+
 export function calculerScore(reponses: { note: number; coefficient: number }[]): number {
   if (reponses.length === 0) return 0;
   const sommeNotes = reponses.reduce((acc, r) => acc + r.note * r.coefficient, 0);

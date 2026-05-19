@@ -1,4 +1,4 @@
-import { strapiGet, strapiPost } from './strapi';
+import { strapiGet, strapiPost, strapiPut, strapiDelete } from './strapi';
 import type { AnalyticsSummary, Client, Evaluation, Questionnaire, Question } from './types';
 
 function normalizeClient(item: any): Client {
@@ -11,8 +11,8 @@ function normalizeClient(item: any): Client {
 function normalizeQuestionnaire(item: any): Questionnaire {
   const attrs = item?.attributes ?? {};
   return {
-    id: item?.id ?? 0,
-    titre: attrs.titre ?? "Questionnaire sans titre",
+    id: Number(item?.id ?? item?.attributes?.id ?? 0),
+    titre: attrs.titre?.trim() ? attrs.titre : "Questionnaire sans titre",
     description: attrs.description,
     actif: Boolean(attrs.actif),
     questions: attrs.questions?.data?.map((question: any) => ({
@@ -61,7 +61,16 @@ export async function getQuestionnaires(): Promise<Questionnaire[]> {
 
 export async function getQuestionnaireById(id: string): Promise<Questionnaire> {
   const res = await strapiGet(`/questionnaires/${id}`, { populate: '*' });
-  return normalizeQuestionnaire({ id: res.data.id, attributes: res.data.attributes });
+  const item = res?.data ?? {};
+  return normalizeQuestionnaire({ id: item.id ?? Number(id), attributes: item.attributes ?? {} });
+}
+
+export async function updateQuestionnaire(id: string, data: { titre: string; description?: string; actif?: boolean }) {
+  return strapiPut(`/questionnaires/${id}`, data);
+}
+
+export async function deleteQuestionnaire(id: number) {
+  return strapiDelete(`/questionnaires/${id}`);
 }
 
 export async function getEvaluations(): Promise<Evaluation[]> {

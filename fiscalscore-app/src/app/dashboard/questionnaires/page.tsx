@@ -1,14 +1,15 @@
 ﻿"use client";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { FileText, Plus, Eye, Edit } from "lucide-react";
-import { getQuestionnaires } from "@/lib/api";
+import { FileText, Plus, Eye, Edit, Trash2 } from "lucide-react";
+import { getQuestionnaires, deleteQuestionnaire } from "@/lib/api";
 import type { Questionnaire } from "@/lib/types";
 
 export default function QuestionnairesPage() {
   const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   useEffect(() => {
     getQuestionnaires()
@@ -18,6 +19,22 @@ export default function QuestionnairesPage() {
   }, []);
 
   const availableCount = useMemo(() => questionnaires.length, [questionnaires]);
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Voulez-vous vraiment supprimer ce questionnaire ?")) {
+      return;
+    }
+
+    setDeletingId(id);
+    try {
+      await deleteQuestionnaire(id);
+      setQuestionnaires((prev) => prev.filter((questionnaire) => questionnaire.id !== id));
+    } catch (err: any) {
+      setError(err?.message ?? "Impossible de supprimer le questionnaire");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -77,8 +94,16 @@ export default function QuestionnairesPage() {
                       <Link href={`/dashboard/questionnaires/${q.id}`} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition">
                         <Eye className="w-4 h-4" />
                       </Link>
-                      <button className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition">
+                      <Link href={`/dashboard/questionnaires/${q.id}/edit`} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition">
                         <Edit className="w-4 h-4" />
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(q.id)}
+                        disabled={deletingId === q.id}
+                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </td>
