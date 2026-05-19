@@ -36,7 +36,7 @@ export default async function QuestionnaireDetailPage({ params }: QuestionnaireP
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-3xl border border-gray-100 bg-white p-8 shadow-sm">
           <p className="text-xs uppercase tracking-[0.2em] text-gray-500">Statut</p>
-          <p className="mt-2 text-lg font-semibold text-gray-900">{attrs.actif ? 'Actif' : 'Inactif'}</p>
+          <p className="mt-2 text-lg font-semibold text-gray-900">{questionnaire.actif ? 'Actif' : 'Inactif'}</p>
           <div className="mt-8 space-y-3">
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-gray-500">Questions totales</p>
