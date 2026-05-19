@@ -1,18 +1,14 @@
-import { strapiGet } from "@/lib/strapi";
+import { getQuestionnaireById } from "@/lib/api";
+import type { Questionnaire } from "@/lib/types";
 
 type QuestionnairePageProps = {
   params: { id: string };
 };
 
-async function getQuestionnaire(id: string) {
-  const res = await strapiGet(`/questionnaires/${id}`, { populate: '*' });
-  return res.data;
-}
-
 export default async function QuestionnaireDetailPage({ params }: QuestionnairePageProps) {
-  let questionnaire: any;
+  let questionnaire: Questionnaire | null = null;
   try {
-    questionnaire = await getQuestionnaire(params.id);
+    questionnaire = await getQuestionnaireById(params.id);
   } catch {
     questionnaire = null;
   }
@@ -28,15 +24,14 @@ export default async function QuestionnaireDetailPage({ params }: QuestionnaireP
     );
   }
 
-  const attrs = questionnaire.attributes;
-  const questions = attrs.questions?.data || [];
-  const evaluations = attrs.evaluations?.data || [];
+  const questions = questionnaire.questions ?? [];
+  const evaluations = questionnaire.evaluations ?? [];
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{attrs.titre}</h1>
-        <p className="text-sm text-gray-500 mt-1">{attrs.description ?? 'Aucune description disponible'}</p>
+        <h1 className="text-2xl font-bold text-gray-900">{questionnaire.titre ?? 'Questionnaire sans titre'}</h1>
+        <p className="text-sm text-gray-500 mt-1">{questionnaire.description ?? 'Aucune description disponible'}</p>
       </div>
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-3xl border border-gray-100 bg-white p-8 shadow-sm">

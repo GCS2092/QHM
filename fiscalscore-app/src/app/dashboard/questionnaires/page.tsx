@@ -62,7 +62,7 @@ export default function QuestionnairesPage() {
                       <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
                         <FileText className="w-4 h-4 text-blue-600" />
                       </div>
-                      <span className="font-medium text-gray-900">{q.titre}</span>
+                      <span className="font-medium text-gray-900">{q.titre ?? 'Questionnaire sans titre'}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-gray-600">{q.questions?.length ?? 0} questions</td>

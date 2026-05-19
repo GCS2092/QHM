@@ -9,20 +9,20 @@ function normalizeClient(item: any): Client {
 }
 
 function normalizeQuestionnaire(item: any): Questionnaire {
-  const attrs = item.attributes;
+  const attrs = item?.attributes ?? {};
   return {
-    id: item.id,
-    titre: attrs.titre,
+    id: item?.id ?? 0,
+    titre: attrs.titre ?? "Questionnaire sans titre",
     description: attrs.description,
-    actif: attrs.actif,
+    actif: Boolean(attrs.actif),
     questions: attrs.questions?.data?.map((question: any) => ({
       id: question.id,
       ...question.attributes,
-    })),
+    })) ?? [],
     evaluations: attrs.evaluations?.data?.map((evaluation: any) => ({
       id: evaluation.id,
       ...evaluation.attributes,
-    })),
+    })) ?? [],
   };
 }
 
@@ -55,7 +55,8 @@ export async function getClientById(id: string): Promise<Client & { evaluations?
 
 export async function getQuestionnaires(): Promise<Questionnaire[]> {
   const res = await strapiGet('/questionnaires', { populate: '*', sort: 'titre:asc' });
-  return (res.data || []).map(normalizeQuestionnaire);
+  const rawData = Array.isArray(res.data) ? res.data : [];
+  return rawData.map(normalizeQuestionnaire);
 }
 
 export async function getQuestionnaireById(id: string): Promise<Questionnaire> {
