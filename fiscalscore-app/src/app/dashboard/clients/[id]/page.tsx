@@ -69,10 +69,10 @@ export default async function ClientDetailPage({ params }: ClientPageProps) {
           <div className="text-sm text-gray-500">Aucune evaluation trouvee pour ce client.</div>
         ) : (
           <div className="space-y-4">
-            {evaluations.map((item) => (
+            {evaluations.filter(Boolean).map((item) => (
               <div key={item.id} className="rounded-2xl border border-gray-100 p-4 bg-gray-50">
                 <p className="font-semibold text-gray-900">{item.questionnaire?.titre ?? 'Questionnaire inconnu'}</p>
-                <p className="text-sm text-gray-600">Score: {item.score} / 100</p>
+                <p className="text-sm text-gray-600">Score: {item.score ?? 0} / 100</p>
                 <p className="text-sm text-gray-500">Date: {item.date}</p>
                 <p className="text-sm text-gray-500">Evaluateur: {item.evaluateur}</p>
               </div>

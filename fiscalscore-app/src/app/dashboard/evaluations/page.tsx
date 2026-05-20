@@ -54,7 +54,7 @@ export default function EvaluationsPage() {
                 <td colSpan={5} className="px-6 py-10 text-center text-gray-400">Aucune evaluation trouvee</td>
               </tr>
             ) : (
-              evaluations.map((e) => (
+              evaluations.filter(Boolean).map((e) => (
                 <tr key={e.id} className="hover:bg-gray-50 transition">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -65,7 +65,7 @@ export default function EvaluationsPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-gray-600">{e.questionnaire?.titre ?? "Questionnaire inconnu"}</td>
-                  <td className="px-6 py-4"><ScoreBadge score={e.score} /></td>
+                  <td className="px-6 py-4"><ScoreBadge score={e.score ?? 0} /></td>
                   <td className="px-6 py-4 text-gray-500">{e.date}</td>
                   <td className="px-6 py-4 text-gray-600">{e.evaluateur}</td>
                 </tr>

@@ -2,9 +2,16 @@ import { strapiGet, strapiPost, strapiPut, strapiDelete } from './strapi';
 import type { AnalyticsSummary, Client, Evaluation, Questionnaire, Question } from './types';
 
 function normalizeClient(item: any): Client {
+  const attrs = item?.attributes ?? {};
   return {
-    id: item.id,
-    ...item.attributes,
+    id: item?.id ?? 0,
+    nom: attrs.nom ?? "",
+    prenom: attrs.prenom ?? "",
+    identifiantFiscal: attrs.identifiantFiscal ?? "",
+    email: attrs.email,
+    telephone: attrs.telephone ?? "",
+    score: Number(attrs.score ?? 0),
+    statut: attrs.statut,
   };
 }
 
@@ -15,24 +22,28 @@ function normalizeQuestionnaire(item: any): Questionnaire {
     titre: attrs.titre?.trim() ? attrs.titre : "Questionnaire sans titre",
     description: attrs.description,
     actif: Boolean(attrs.actif),
-    questions: attrs.questions?.data?.map((question: any) => ({
-      id: question.id,
-      ...question.attributes,
-    })) ?? [],
-    evaluations: attrs.evaluations?.data?.map((evaluation: any) => ({
-      id: evaluation.id,
-      ...evaluation.attributes,
-    })) ?? [],
+    questions: Array.isArray(attrs.questions?.data)
+      ? attrs.questions.data.filter(Boolean).map((question: any) => ({
+          id: question.id,
+          ...question.attributes,
+        }))
+      : [],
+    evaluations: Array.isArray(attrs.evaluations?.data)
+      ? attrs.evaluations.data.filter(Boolean).map((evaluation: any) => ({
+          id: evaluation.id,
+          ...evaluation.attributes,
+        }))
+      : [],
   };
 }
 
 function normalizeEvaluation(item: any): Evaluation {
-  const attrs = item.attributes;
+  const attrs = item?.attributes ?? {};
   return {
-    id: item.id,
-    score: attrs.score,
-    date: attrs.date,
-    evaluateur: attrs.evaluateur,
+    id: item?.id ?? 0,
+    score: Number(attrs.score ?? 0),
+    date: attrs.date ?? "",
+    evaluateur: attrs.evaluateur ?? "",
     commentaire: attrs.commentaire,
     client: attrs.client?.data ? normalizeClient(attrs.client.data) : undefined,
     questionnaire: attrs.questionnaire?.data ? normalizeQuestionnaire(attrs.questionnaire.data) : undefined,
@@ -41,7 +52,8 @@ function normalizeEvaluation(item: any): Evaluation {
 
 export async function getClients(): Promise<Client[]> {
   const res = await strapiGet('/clients', { populate: '*', sort: 'nom:asc' });
-  return (res.data || []).map(normalizeClient);
+  const rawData = Array.isArray(res.data) ? res.data.filter(Boolean) : [];
+  return rawData.map(normalizeClient);
 }
 
 export async function getClientById(id: string): Promise<(Client & { evaluations?: Evaluation[] }) | null> {
@@ -53,13 +65,15 @@ export async function getClientById(id: string): Promise<(Client & { evaluations
   const client = normalizeClient({ id: res.data.id, attributes: res.data.attributes });
   return {
     ...client,
-    evaluations: res.data.attributes.evaluations?.data?.map(normalizeEvaluation),
+    evaluations: Array.isArray(res.data.attributes.evaluations?.data)
+      ? res.data.attributes.evaluations.data.filter(Boolean).map(normalizeEvaluation)
+      : [],
   };
 }
 
 export async function getQuestionnaires(): Promise<Questionnaire[]> {
   const res = await strapiGet('/questionnaires', { populate: '*', sort: 'titre:asc' });
-  const rawData = Array.isArray(res.data) ? res.data : [];
+  const rawData = Array.isArray(res.data) ? res.data.filter(Boolean) : [];
   return rawData.map(normalizeQuestionnaire);
 }
 
@@ -79,7 +93,8 @@ export async function deleteQuestionnaire(id: number) {
 
 export async function getEvaluations(): Promise<Evaluation[]> {
   const res = await strapiGet('/evaluations', { populate: '*', sort: 'date:desc' });
-  return (res.data || []).map(normalizeEvaluation);
+  const rawData = Array.isArray(res.data) ? res.data.filter(Boolean) : [];
+  return rawData.map(normalizeEvaluation);
 }
 
 export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
@@ -89,9 +104,9 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
     strapiGet('/questionnaires', { 'fields[0]': 'id', 'fields[1]': 'actif' }),
   ]);
 
-  const evaluations = evaluationsRes.data || [];
+  const evaluations = Array.isArray(evaluationsRes.data) ? evaluationsRes.data.filter(Boolean) : [];
   const clientsCount = clientsRes.data?.length ?? 0;
-  const questionnaires = questionnairesRes.data || [];
+  const questionnaires = Array.isArray(questionnairesRes.data) ? questionnairesRes.data.filter(Boolean) : [];
   const activeQuestionnaires = questionnaires.filter((item: any) => item.attributes?.actif).length;
   const inactiveQuestionnaires = questionnaires.length - activeQuestionnaires;
 
@@ -147,7 +162,7 @@ export async function getDashboardSummary() {
     strapiGet('/questionnaires', { fields: 'id' }),
   ]);
 
-  const evaluations = evaluationsRes.data || [];
+  const evaluations = Array.isArray(evaluationsRes.data) ? evaluationsRes.data.filter(Boolean) : [];
   const scores: number[] = evaluations.map((item: any) => Number(item.attributes.score ?? 0));
   const averageScore = scores.length > 0 ? Math.round(scores.reduce((acc: number, score: number) => acc + score, 0) / scores.length) : 0;
   const conformesCount = scores.filter((score: number) => score >= 80).length;
@@ -219,5 +234,10 @@ export async function createEvaluation(data: {
   evaluateur: string;
   commentaire?: string;
 }) {
-  return strapiPost('/evaluations', data);
+  // ✅ Strapi v5 : les relations doivent utiliser le format "connect"
+  return strapiPost('/evaluations', {
+    ...data,
+    client: { connect: [data.client] },
+    questionnaire: { connect: [data.questionnaire] },
+  });
 }
