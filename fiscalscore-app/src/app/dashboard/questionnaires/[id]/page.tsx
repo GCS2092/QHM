@@ -66,8 +66,8 @@ export default async function QuestionnaireDetailPage({ params }: QuestionnaireP
             <ul className="space-y-3">
               {questions.map((question: any) => (
                 <li key={question.id} className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
-                  <p className="font-medium text-gray-900">{question.attributes?.texte ?? question.texte}</p>
-                  <p className="text-xs text-gray-500">Coefficient: {question.attributes?.coefficient ?? question.coefficient}</p>
+                  <p className="font-medium text-gray-900">{question.texte}</p>
+                  <p className="text-xs text-gray-500">Coefficient: {question.coefficient}</p>
                 </li>
               ))}
             </ul>

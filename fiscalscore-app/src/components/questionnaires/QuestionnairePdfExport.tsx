@@ -58,7 +58,7 @@ function QuestionnairePdfDocument({ questionnaire }: { questionnaire: Questionna
           <Text style={styles.sectionTitle}>Questions</Text>
           {questionnaire.questions?.length ? (
             questionnaire.questions.map((question, index) => (
-              <Text key={`question-${index}`} style={styles.question}>- {question.texte ?? question?.texte ?? "Question sans texte"}</Text>
+              <Text key={`question-${index}`} style={styles.question}>- {question.texte ?? "Question sans texte"}</Text>
             ))
           ) : (
             <Text style={styles.row}>Aucune question disponible.</Text>

@@ -44,8 +44,12 @@ export async function getClients(): Promise<Client[]> {
   return (res.data || []).map(normalizeClient);
 }
 
-export async function getClientById(id: string): Promise<Client & { evaluations?: Evaluation[] }> {
+export async function getClientById(id: string): Promise<(Client & { evaluations?: Evaluation[] }) | null> {
   const res = await strapiGet(`/clients/${id}`, { populate: '*' });
+  if (!res?.data) {
+    return null;
+  }
+
   const client = normalizeClient({ id: res.data.id, attributes: res.data.attributes });
   return {
     ...client,
