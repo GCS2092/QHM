@@ -1,52 +1,43 @@
 import { strapiGet, strapiPost, strapiPut, strapiDelete } from './strapi';
-import type { AnalyticsSummary, Client, Evaluation, Questionnaire, Question } from './types';
+import type { AnalyticsSummary, Client, Evaluation, Questionnaire } from './types';
 
 function normalizeClient(item: any): Client {
-  const attrs = item?.attributes ?? {};
   return {
     id: item?.id ?? 0,
-    nom: attrs.nom ?? "",
-    prenom: attrs.prenom ?? "",
-    identifiantFiscal: attrs.identifiantFiscal ?? "",
-    email: attrs.email,
-    telephone: attrs.telephone ?? "",
-    score: Number(attrs.score ?? 0),
-    statut: attrs.statut,
+    nom: item?.nom ?? "",
+    prenom: item?.prenom ?? "",
+    identifiantFiscal: item?.identifiantFiscal ?? "",
+    email: item?.email,
+    telephone: item?.telephone ?? "",
+    score: Number(item?.score ?? 0),
+    statut: item?.statut,
   };
 }
 
 function normalizeQuestionnaire(item: any): Questionnaire {
-  const attrs = item?.attributes ?? {};
   return {
-    id: Number(item?.id ?? item?.attributes?.id ?? 0),
-    titre: attrs.titre?.trim() ? attrs.titre : "Questionnaire sans titre",
-    description: attrs.description,
-    actif: Boolean(attrs.actif),
-    questions: Array.isArray(attrs.questions?.data)
-      ? attrs.questions.data.filter(Boolean).map((question: any) => ({
-          id: question.id,
-          ...question.attributes,
-        }))
+    id: Number(item?.id ?? 0),
+    titre: item?.titre?.trim() ? item.titre : "Questionnaire sans titre",
+    description: item?.description,
+    actif: Boolean(item?.actif),
+    questions: Array.isArray(item?.questions)
+      ? item.questions.filter(Boolean)
       : [],
-    evaluations: Array.isArray(attrs.evaluations?.data)
-      ? attrs.evaluations.data.filter(Boolean).map((evaluation: any) => ({
-          id: evaluation.id,
-          ...evaluation.attributes,
-        }))
+    evaluations: Array.isArray(item?.evaluations)
+      ? item.evaluations.filter(Boolean)
       : [],
   };
 }
 
 function normalizeEvaluation(item: any): Evaluation {
-  const attrs = item?.attributes ?? {};
   return {
     id: item?.id ?? 0,
-    score: Number(attrs.score ?? 0),
-    date: attrs.date ?? "",
-    evaluateur: attrs.evaluateur ?? "",
-    commentaire: attrs.commentaire,
-    client: attrs.client?.data ? normalizeClient(attrs.client.data) : undefined,
-    questionnaire: attrs.questionnaire?.data ? normalizeQuestionnaire(attrs.questionnaire.data) : undefined,
+    score: Number(item?.score ?? 0),
+    date: item?.date ?? "",
+    evaluateur: item?.evaluateur ?? "",
+    commentaire: item?.commentaire,
+    client: item?.client ? normalizeClient(item.client) : undefined,
+    questionnaire: item?.questionnaire ? normalizeQuestionnaire(item.questionnaire) : undefined,
   };
 }
 
@@ -58,15 +49,13 @@ export async function getClients(): Promise<Client[]> {
 
 export async function getClientById(id: string): Promise<(Client & { evaluations?: Evaluation[] }) | null> {
   const res = await strapiGet(`/clients/${id}`, { populate: '*' });
-  if (!res?.data) {
-    return null;
-  }
+  if (!res?.data) return null;
 
-  const client = normalizeClient({ id: res.data.id, attributes: res.data.attributes });
+  const client = normalizeClient(res.data);
   return {
     ...client,
-    evaluations: Array.isArray(res.data.attributes.evaluations?.data)
-      ? res.data.attributes.evaluations.data.filter(Boolean).map(normalizeEvaluation)
+    evaluations: Array.isArray(res.data.evaluations)
+      ? res.data.evaluations.filter(Boolean).map(normalizeEvaluation)
       : [],
   };
 }
@@ -79,8 +68,7 @@ export async function getQuestionnaires(): Promise<Questionnaire[]> {
 
 export async function getQuestionnaireById(id: string): Promise<Questionnaire> {
   const res = await strapiGet(`/questionnaires/${id}`, { populate: '*' });
-  const item = res?.data ?? {};
-  return normalizeQuestionnaire({ id: item.id ?? Number(id), attributes: item.attributes ?? {} });
+  return normalizeQuestionnaire(res?.data ?? {});
 }
 
 export async function updateQuestionnaire(id: string, data: { titre: string; description?: string; actif?: boolean }) {
@@ -107,10 +95,10 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
   const evaluations = Array.isArray(evaluationsRes.data) ? evaluationsRes.data.filter(Boolean) : [];
   const clientsCount = clientsRes.data?.length ?? 0;
   const questionnaires = Array.isArray(questionnairesRes.data) ? questionnairesRes.data.filter(Boolean) : [];
-  const activeQuestionnaires = questionnaires.filter((item: any) => item.attributes?.actif).length;
+  const activeQuestionnaires = questionnaires.filter((item: any) => item?.actif).length;
   const inactiveQuestionnaires = questionnaires.length - activeQuestionnaires;
 
-  const scores: number[] = evaluations.map((item: any) => Number(item.attributes.score ?? 0));
+  const scores: number[] = evaluations.map((item: any) => Number(item?.score ?? 0));
   const averageScore = scores.length > 0 ? Math.round(scores.reduce((acc, score) => acc + score, 0) / scores.length) : 0;
   const conformesCount = scores.filter((score) => score >= 80).length;
 
@@ -119,15 +107,15 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
   const formatter = new Intl.DateTimeFormat('fr-FR', { month: 'short' });
 
   evaluations.forEach((item: any) => {
-    const score = Number(item.attributes.score ?? 0);
-    const client = item.attributes.client?.data;
+    const score = Number(item?.score ?? 0);
+    const client = item?.client;
     if (client?.id != null && score <= 50 && !riskMap.has(client.id)) {
-      const nom = [client.attributes.nom, client.attributes.prenom].filter(Boolean).join(' ');
+      const nom = [client.nom, client.prenom].filter(Boolean).join(' ');
       const alerte = score <= 20 ? 'Critique' : score <= 40 ? 'Risque eleve' : 'Risque modere';
       riskMap.set(client.id, { nom: nom || 'Client inconnu', score, alerte });
     }
 
-    const date = item.attributes.date ? new Date(item.attributes.date) : null;
+    const date = item?.date ? new Date(item.date) : null;
     if (date instanceof Date && !Number.isNaN(date.getTime())) {
       const key = `${date.getFullYear()}-${date.getMonth()}`;
       const label = `${formatter.format(date)} ${date.getFullYear().toString().slice(-2)}`;
@@ -163,7 +151,7 @@ export async function getDashboardSummary() {
   ]);
 
   const evaluations = Array.isArray(evaluationsRes.data) ? evaluationsRes.data.filter(Boolean) : [];
-  const scores: number[] = evaluations.map((item: any) => Number(item.attributes.score ?? 0));
+  const scores: number[] = evaluations.map((item: any) => Number(item?.score ?? 0));
   const averageScore = scores.length > 0 ? Math.round(scores.reduce((acc: number, score: number) => acc + score, 0) / scores.length) : 0;
   const conformesCount = scores.filter((score: number) => score >= 80).length;
 
@@ -172,15 +160,15 @@ export async function getDashboardSummary() {
   const formatter = new Intl.DateTimeFormat('fr-FR', { month: 'short' });
 
   evaluations.forEach((item: any) => {
-    const score = Number(item.attributes.score ?? 0);
-    const client = item.attributes.client?.data;
+    const score = Number(item?.score ?? 0);
+    const client = item?.client;
     if (client?.id != null && score <= 40 && !riskMap.has(client.id)) {
-      const nom = [client.attributes.nom, client.attributes.prenom].filter(Boolean).join(' ');
+      const nom = [client.nom, client.prenom].filter(Boolean).join(' ');
       const alerte = score <= 20 ? 'Critique' : 'Risque eleve';
       riskMap.set(client.id, { nom: nom || 'Client inconnu', score, alerte });
     }
 
-    const date = item.attributes.date ? new Date(item.attributes.date) : null;
+    const date = item?.date ? new Date(item.date) : null;
     if (date instanceof Date && !Number.isNaN(date.getTime())) {
       const key = `${date.getFullYear()}-${date.getMonth()}`;
       const label = `${formatter.format(date)} ${date.getFullYear().toString().slice(-2)}`;
@@ -234,7 +222,7 @@ export async function createEvaluation(data: {
   evaluateur: string;
   commentaire?: string;
 }) {
-  // ✅ Strapi v5 : les relations doivent utiliser le format "connect"
+  // ✅ Strapi v5 : relations avec "connect"
   return strapiPost('/evaluations', {
     ...data,
     client: { connect: [data.client] },
