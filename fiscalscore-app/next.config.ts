@@ -1,16 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // @react-pdf/renderer tente d'importer 'canvas' qui n'existe pas
-  // dans l'environnement serveur Node.js. On l'aliase vers false pour
-  // eviter le crash webpack au build.
-  webpack: (config) => {
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      canvas: false,
-    };
-    return config;
-  },
+  // Next.js 15+ utilise Turbopack par defaut.
+  // Les composants @react-pdf/renderer sont importes avec { ssr: false }
+  // donc ils ne sont jamais rendus cote serveur — pas besoin d'alias canvas.
+  turbopack: {},
 };
 
 export default nextConfig;
