@@ -1,0 +1,249 @@
+Voici le cahier des charges complet, consolidé et enrichi de toutes nos discussions.
+
+---
+
+# Cahier des charges — Outil d'évaluation comportementale d'audit
+
+---
+
+## 1. Rôles et accès
+
+### Admin
+- Accès complet à toute l'application
+- Gère les clients (créer, modifier, archiver, supprimer)
+- Gère les questions de base des deux questionnaires (créer, modifier, supprimer)
+- Crée et gère les comptes évaluateurs
+- Assigne et désassigne des clients à des évaluateurs
+- Consulte toutes les évaluations de tous les évaluateurs
+- Exporte tous les PDFs
+- Un client peut être assigné à plusieurs évaluateurs simultanément
+
+### Évaluateur
+- Voit uniquement les clients qui lui ont été assignés par l'admin
+- Démarre, remplit et termine une évaluation sur ses clients
+- Peut ajouter des questions supplémentaires sur une évaluation précise (pas sur les questions de base)
+- Génère le PDF de ses évaluations
+- Ne peut pas modifier les questions de base
+- Ne peut pas accéder aux évaluations des autres évaluateurs
+
+---
+
+## 2. Gestion des clients
+
+### Champs du profil client
+- Nom de l'entreprise — obligatoire
+- Nom du responsable financier et/ou comptable — obligatoire
+- Numéro de téléphone — optionnel
+- Adresse mail — optionnel
+- Secteur d'activité — optionnel (utile pour filtrer les rapports plus tard)
+- Date de création de la fiche — automatique
+- Évaluateurs assignés — géré par l'admin
+
+### Interactions sur la fiche client
+- L'admin peut modifier tous les champs à tout moment
+- L'admin voit la liste de toutes les évaluations liées à ce client (historique complet)
+- L'évaluateur voit les infos du client et peut démarrer une nouvelle évaluation
+- L'évaluateur voit uniquement ses propres évaluations sur ce client
+- Archivage possible d'un client sans suppression (pour garder l'historique)
+
+---
+
+## 3. Modèle de données essentiel
+
+```
+utilisateur → id, nom, email, mot_de_passe, rôle (admin / évaluateur)
+
+client → id, nom_entreprise, nom_responsable, téléphone, email, secteur, date_création, archivé
+
+assignation → id, client_id, évaluateur_id, date_assignation
+
+questionnaire_base → id, type (planification / mission), actif
+
+question_base → id, questionnaire_id, critère, indicateur, question, ordre
+
+évaluation → id, client_id, évaluateur_id, type_questionnaire, date_évaluation, 
+             commentaire_global, statut (en_cours / terminée), score_final, 
+             score_max_réel, pourcentage_score
+
+réponse → id, évaluation_id, question_id (nullable), question_custom_id (nullable),
+          note (0-3), commentaire_évaluateur
+
+question_custom → id, évaluation_id, critère, indicateur, question, ordre
+```
+
+---
+
+## 4. Les questionnaires
+
+### Deux types fixes
+- Analyse comportementale — Phase de planification : 7 questions, score de base max 21
+- Analyse comportementale — Pendant la mission : 10 questions, score de base max 30
+
+### Structure de chaque question (colonnes du tableau)
+| Colonne | Détail |
+|---|---|
+| Critères comportementaux observables | Catégorie du comportement évalué |
+| Indicateurs | Signes concrets à observer |
+| Question | La question posée à l'évaluateur |
+| Niveau observé | Note de 0 à 3 |
+| Commentaire automatique | Texte lié à la note choisie |
+| Commentaire libre | Zone de saisie libre pour l'évaluateur |
+
+### Définition complète des notes
+- 0 = Comportement non observé / Sans objet — exclu du calcul du score (voir section 5)
+- 1 = Comportement préoccupant
+- 2 = Comportement neutre à plutôt collaboratif
+- 3 = Comportement très collaboratif et professionnel
+
+### Gestion des questions de base
+- Seul l'admin peut créer, modifier, supprimer les questions de base
+- Les questions de base sont verrouillées dès qu'une évaluation est en cours sur ce questionnaire — elles ne peuvent plus être modifiées tant que l'évaluation n'est pas terminée, pour garantir la cohérence des données
+- L'ordre des questions est modifiable par l'admin (drag and drop recommandé)
+
+---
+
+## 5. Calcul du score — logique avec questions ajoutées
+
+C'est le point le plus important à bien implémenter.
+
+### Problème
+Si un évaluateur ajoute des questions custom, le score max change. Les seuils fixes (18, 12, 24, 18) ne sont plus valides.
+
+### Solution retenue : calcul en pourcentage du score max réel
+Le score final est toujours exprimé en deux formes : score brut ET pourcentage.
+
+**Règle de calcul**
+- Les questions notées 0 sont exclues du calcul (non observé = ne pénalise pas)
+- Score max réel = nombre de questions notées 1, 2 ou 3 × 3
+- Score obtenu = somme des notes 1, 2, 3
+- Pourcentage = (score obtenu / score max réel) × 100
+
+**Seuils convertis en pourcentage**
+
+Pour la phase de planification :
+- 18/21 = 85,7% → seuil vert : ≥ 86%
+- 12/21 = 57,1% → seuil orange : entre 57% et 85%
+- En dessous de 57% → seuil rouge
+
+Pour pendant la mission :
+- 24/30 = 80% → seuil vert : ≥ 80%
+- 18/30 = 60% → seuil orange : entre 60% et 79%
+- En dessous de 60% → seuil rouge
+
+Ces pourcentages s'appliquent quel que soit le nombre de questions (base + custom), donc le scoring reste cohérent et comparable entre évaluations.
+
+---
+
+## 6. Seuils et commentaires automatiques
+
+### Phase de planification
+| Résultat | Couleur | Commentaire |
+|---|---|---|
+| ≥ 86% | Vert | Comportement très favorable à une mission fluide. Pas de mesures particulières à prévoir. |
+| 57% – 85% | Orange | Risques comportementaux modérés. Renforcer les points de suivi, prévoir des rappels et maintenir un dialogue ouvert. |
+| < 57% | Rouge | Risques comportementaux élevés. Adapter la stratégie d'audit : tests étendus, vérifications renforcées, formalisations accrues des échanges, implication du superviseur. |
+
+### Pendant la mission
+| Résultat | Couleur | Commentaire |
+|---|---|---|
+| ≥ 80% | Vert | Comportement très coopératif et favorable au bon déroulement de la mission. Échanges fluides, informations accessibles, risques comportementaux faibles. |
+| 60% – 79% | Orange | Risques comportementaux modérés. Certaines difficultés peuvent apparaître (retards, imprécisions, tensions ponctuelles). Renforcer le suivi des demandes, formaliser davantage les échanges, maintenir une communication régulière. |
+| < 60% | Rouge | Risques comportementaux élevés. Le comportement observé peut affecter la qualité des travaux d'audit (réticence, incohérences, manque de transparence, blocages). Adapter la stratégie : augmentation des contrôles, extension des tests, supervision renforcée, demandes écrites systématiques, implication du manager ou superviseur. |
+
+---
+
+## 7. Déroulement d'une évaluation — interactions détaillées
+
+### Étape 1 — Démarrage
+L'évaluateur ouvre la fiche d'un client assigné et clique sur "Commencer une évaluation". Un formulaire s'affiche avec :
+- Date d'évaluation — automatique, modifiable
+- Nom de l'évaluateur — pré-rempli, non modifiable
+- Choix du questionnaire — planification ou mission
+- Commentaire d'introduction — optionnel, libre
+
+### Étape 2 — Remplissage du questionnaire
+Le questionnaire s'affiche sous forme de tableau avec toutes les colonnes. Pour chaque question :
+- L'évaluateur sélectionne une note de 0 à 3
+- Le commentaire automatique lié à la note s'affiche immédiatement
+- L'évaluateur peut ajouter un commentaire libre en complément
+- Le score partiel se met à jour en temps réel en haut du tableau
+
+L'évaluateur peut ajouter des questions custom en bas du tableau. Chaque question ajoutée demande : critère, indicateur, question. Elle reçoit ensuite une note de 0 à 3 comme les autres.
+
+La sauvegarde automatique toutes les X minutes est recommandée pour éviter la perte de données.
+
+### Étape 3 — Validation et blocage
+Le bouton "Terminer l'évaluation" est désactivé tant que toutes les questions n'ont pas reçu une note (0 compris — le 0 est une réponse valide). Un indicateur de progression affiche "X questions sur Y répondues". Une fois toutes les questions notées, le bouton s'active.
+
+### Étape 4 — Résultat
+À la validation, l'application affiche :
+- Le score brut et le pourcentage
+- La couleur et le commentaire automatique correspondant au seuil
+- Le graphe radar ou barre par critère (voir section 8)
+- Un résumé de toutes les réponses
+- Le bouton de génération PDF
+
+L'évaluation passe en statut "terminée" et ne peut plus être modifiée (sauf par l'admin).
+
+---
+
+## 8. Visualisation graphique
+
+### Dans l'application
+Deux types de graphes disponibles après une évaluation terminée :
+
+**Graphe radar (spider chart)** — recommandé pour la planification : visualise le score par critère comportemental, les zones rouges/oranges/vertes ressortent immédiatement.
+
+**Graphe en barres** — recommandé pour la mission : une barre par question avec la couleur correspondant à la note (rouge = 0-1, orange = 2, vert = 3).
+
+**Jauge globale** — affiche le pourcentage final avec la couleur du seuil atteint.
+
+Toutes ces visualisations sont générées avec Recharts côté Next.js.
+
+### Dans le PDF
+Les mêmes graphes sont inclus dans le rapport PDF, rendus côté serveur avec React-PDF. Les couleurs correspondent exactement aux seuils.
+
+---
+
+## 9. Rapport PDF
+
+### Contenu du rapport
+- En-tête : nom de l'application, date de génération
+- Informations client : nom de l'entreprise, nom du responsable, téléphone, email, secteur
+- Informations de l'évaluation : date, nom de l'évaluateur, type de questionnaire
+- Commentaire d'introduction de l'évaluateur
+- Score global avec couleur et commentaire de seuil
+- Jauge visuelle du score en pourcentage
+- Graphe radar ou en barres selon le type de questionnaire
+- Tableau complet de toutes les questions avec notes et commentaires
+- Questions custom clairement identifiées dans le tableau
+- Commentaire de conclusion si saisi
+
+### Génération
+- Disponible dès que l'évaluation est en statut "terminée"
+- Téléchargeable en un clic depuis la fiche client ou depuis la liste des évaluations
+- Nommage automatique du fichier : `NomEntreprise_TypeQuestionnaire_DateEvaluation.pdf`
+
+---
+
+## 10. Stack technique confirmée
+
+| Couche | Choix | Raison |
+|---|---|---|
+| Backend / CMS | Strapi v5 | Gestion des rôles, API REST, politiques de permissions custom |
+| Base de données | PostgreSQL | Relations complexes, fiabilité |
+| Frontend | Next.js 14 App Router | SSR, routes protégées, performance |
+| UI | Tailwind + shadcn/ui | Composants prêts : tables, modals, badges |
+| Graphes | Recharts | Natif React, radar + barres + jauge |
+| PDF | React-PDF | Rendu serveur, graphes inclus |
+| Auth | Strapi JWT + NextAuth | Gestion session + rôles côté front |
+
+---
+
+## 11. Ce qui reste à trancher
+
+Deux points ouverts que tu dois décider avant de commencer à coder :
+
+**La sauvegarde automatique** — toutes les combien de minutes ? Ou uniquement à chaque changement de note ? La deuxième option est plus propre techniquement (sauvegarde à chaque interaction) mais génère plus de requêtes.
+
+**L'évaluation par deux évaluateurs sur le même client** — si deux évaluateurs remplissent un questionnaire sur le même client, est-ce que l'admin voit les deux séparément dans l'historique, ou est-ce qu'il faut une vue de synthèse qui compare les deux ? Pour la V1 je recommande de les garder séparés et de ne pas faire de synthèse automatique, ça peut venir en V2.
