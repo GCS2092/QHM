@@ -1,7 +1,19 @@
 "use client";
 
-import { PDFDownloadLink, Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
-import { getSeuil, formatEvaluationPdfName, noteBarColor, type QuestionnaireType } from "@/lib/scoring";
+import {
+  PDFDownloadLink,
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet,
+} from "@react-pdf/renderer";
+import {
+  getSeuil,
+  formatEvaluationPdfName,
+  noteBarColor,
+  type QuestionnaireType,
+} from "@/lib/scoring";
 import type { Evaluation } from "@/lib/types";
 
 const styles = StyleSheet.create({
@@ -11,15 +23,34 @@ const styles = StyleSheet.create({
   section: { marginBottom: 12 },
   sectionTitle: { fontSize: 11, fontWeight: "bold", marginBottom: 6 },
   row: { marginBottom: 3 },
-  tableHeader: { flexDirection: "row", borderBottomWidth: 1, borderColor: "#ccc", paddingBottom: 4, marginBottom: 4, fontWeight: "bold" },
-  tableRow: { flexDirection: "row", marginBottom: 6, borderBottomWidth: 0.5, borderColor: "#eee", paddingBottom: 4 },
+  tableHeader: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderColor: "#ccc",
+    paddingBottom: 4,
+    marginBottom: 4,
+    fontWeight: "bold",
+  },
+  tableRow: {
+    flexDirection: "row",
+    marginBottom: 6,
+    borderBottomWidth: 0.5,
+    borderColor: "#eee",
+    paddingBottom: 4,
+  },
   col1: { width: "18%" },
   col2: { width: "18%" },
   col3: { width: "28%" },
   col4: { width: "8%" },
   col5: { width: "28%" },
   seuilBox: { padding: 8, marginVertical: 8, borderRadius: 4 },
-  gaugeOuter: { height: 14, backgroundColor: "#e5e7eb", borderRadius: 4, marginTop: 6, marginBottom: 8 },
+  gaugeOuter: {
+    height: 14,
+    backgroundColor: "#e5e7eb",
+    borderRadius: 4,
+    marginTop: 6,
+    marginBottom: 8,
+  },
   gaugeInner: { height: 14, borderRadius: 4 },
   chartRow: { flexDirection: "row", alignItems: "center", marginBottom: 4 },
   chartLabel: { width: "35%", fontSize: 8 },
@@ -32,7 +63,7 @@ function buildRadarPdfData(evaluation: Evaluation) {
   const byCritere = new Map<string, { total: number; count: number }>();
   evaluation.reponses?.forEach((r) => {
     if (r.note === 0) return;
-    const key = r.question?.critere ?? r.questionCustom?.critere ?? 'Autre';
+    const key = r.question?.critere ?? r.questionCustom?.critere ?? "Autre";
     const cur = byCritere.get(key) ?? { total: 0, count: 0 };
     cur.total += r.note;
     cur.count += 1;
@@ -46,69 +77,142 @@ function buildRadarPdfData(evaluation: Evaluation) {
 
 function buildBarPdfData(evaluation: Evaluation) {
   return (evaluation.reponses ?? []).map((r, i) => ({
-    label: (r.question?.texte ?? r.questionCustom?.texte ?? `Q${i + 1}`).slice(0, 28),
+    label: (r.question?.texte ?? r.questionCustom?.texte ?? `Q${i + 1}`).slice(
+      0,
+      28,
+    ),
     note: r.note,
   }));
 }
 
 function EvaluationPdfDocument({ evaluation }: { evaluation: Evaluation }) {
-  const type = (evaluation.questionnaire?.type ?? 'planification') as QuestionnaireType;
+  const type = (evaluation.questionnaire?.type ??
+    "planification") as QuestionnaireType;
   const seuil = getSeuil(evaluation.pourcentageScore, type);
-  const seuilBg = seuil.couleur === 'vert' ? '#dcfce7' : seuil.couleur === 'orange' ? '#ffedd5' : '#fee2e2';
-  const gaugeColor = seuil.couleur === 'vert' ? '#22c55e' : seuil.couleur === 'orange' ? '#f97316' : '#ef4444';
-  const chartData = type === 'planification' ? buildRadarPdfData(evaluation) : buildBarPdfData(evaluation);
+  const seuilBg =
+    seuil.couleur === "vert"
+      ? "#dcfce7"
+      : seuil.couleur === "orange"
+        ? "#ffedd5"
+        : "#fee2e2";
+  const gaugeColor =
+    seuil.couleur === "vert"
+      ? "#22c55e"
+      : seuil.couleur === "orange"
+        ? "#f97316"
+        : "#ef4444";
+  const chartData =
+    type === "planification"
+      ? buildRadarPdfData(evaluation)
+      : buildBarPdfData(evaluation);
 
   return (
     <Document>
       <Page style={styles.page}>
-        <Text style={styles.title}>QHM — Rapport d&apos;évaluation comportementale</Text>
-        <Text style={styles.subtitle}>Généré le {new Date().toLocaleDateString('fr-FR')}</Text>
+        <Text style={styles.title}>
+          Auditude — Rapport d&apos;évaluation comportementale
+        </Text>
+        <Text style={styles.subtitle}>
+          Généré le {new Date().toLocaleDateString("fr-FR")}
+        </Text>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Client</Text>
-          <Text style={styles.row}>Entreprise : {evaluation.client?.nomEntreprise}</Text>
-          <Text style={styles.row}>Responsable : {evaluation.client?.nomResponsable}</Text>
-          <Text style={styles.row}>Téléphone : {evaluation.client?.telephone ?? '—'}</Text>
-          <Text style={styles.row}>Email : {evaluation.client?.email ?? '—'}</Text>
-          <Text style={styles.row}>Secteur : {evaluation.client?.secteur ?? '—'}</Text>
+          <Text style={styles.row}>
+            Entreprise : {evaluation.client?.nomEntreprise}
+          </Text>
+          <Text style={styles.row}>
+            Responsable : {evaluation.client?.nomResponsable}
+          </Text>
+          <Text style={styles.row}>
+            Téléphone : {evaluation.client?.telephone ?? "—"}
+          </Text>
+          <Text style={styles.row}>
+            Email : {evaluation.client?.email ?? "—"}
+          </Text>
+          <Text style={styles.row}>
+            Secteur : {evaluation.client?.secteur ?? "—"}
+          </Text>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Évaluation</Text>
           <Text style={styles.row}>Date : {evaluation.dateEvaluation}</Text>
           <Text style={styles.row}>Évaluateur : {evaluation.evaluateur}</Text>
-          <Text style={styles.row}>Type : {type === 'planification' ? 'Phase de planification' : 'Pendant la mission'}</Text>
-          <Text style={styles.row}>Questionnaire : {evaluation.questionnaire?.titre}</Text>
+          <Text style={styles.row}>
+            Type :{" "}
+            {type === "planification"
+              ? "Phase de planification"
+              : "Pendant la mission"}
+          </Text>
+          <Text style={styles.row}>
+            Questionnaire : {evaluation.questionnaire?.titre}
+          </Text>
           {evaluation.commentaireGlobal ? (
-            <Text style={styles.row}>Introduction : {evaluation.commentaireGlobal}</Text>
+            <Text style={styles.row}>
+              Introduction : {evaluation.commentaireGlobal}
+            </Text>
           ) : null}
         </View>
 
         <View style={[styles.seuilBox, { backgroundColor: seuilBg }]}>
-          <Text>Score brut : {evaluation.scoreFinal} / {evaluation.scoreMaxReel}</Text>
-          <Text>Pourcentage : {evaluation.pourcentageScore}% — {seuil.label}</Text>
+          <Text>
+            Score brut : {evaluation.scoreFinal} / {evaluation.scoreMaxReel}
+          </Text>
+          <Text>
+            Pourcentage : {evaluation.pourcentageScore}% — {seuil.label}
+          </Text>
           <View style={styles.gaugeOuter}>
-            <View style={[styles.gaugeInner, { width: `${evaluation.pourcentageScore}%`, backgroundColor: gaugeColor }]} />
+            <View
+              style={[
+                styles.gaugeInner,
+                {
+                  width: `${evaluation.pourcentageScore}%`,
+                  backgroundColor: gaugeColor,
+                },
+              ]}
+            />
           </View>
           <Text>{seuil.commentaire}</Text>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
-            {type === 'planification' ? 'Scores par critère (radar)' : 'Scores par question (barres)'}
+            {type === "planification"
+              ? "Scores par critère (radar)"
+              : "Scores par question (barres)"}
           </Text>
           {chartData.map((item, i) => {
-            const widthPct = type === 'planification' ? (item as { pct: number }).pct : ((item as { note: number }).note / 3) * 100;
-            const color = type === 'planification'
-              ? widthPct >= 86 ? '#22c55e' : widthPct >= 57 ? '#f97316' : '#ef4444'
-              : noteBarColor((item as { note: number }).note);
-            const label = type === 'planification' ? (item as { label: string }).label : (item as { label: string }).label;
-            const value = type === 'planification' ? `${(item as { pct: number }).pct}%` : String((item as { note: number }).note);
+            const widthPct =
+              type === "planification"
+                ? (item as { pct: number }).pct
+                : ((item as { note: number }).note / 3) * 100;
+            const color =
+              type === "planification"
+                ? widthPct >= 86
+                  ? "#22c55e"
+                  : widthPct >= 57
+                    ? "#f97316"
+                    : "#ef4444"
+                : noteBarColor((item as { note: number }).note);
+            const label =
+              type === "planification"
+                ? (item as { label: string }).label
+                : (item as { label: string }).label;
+            const value =
+              type === "planification"
+                ? `${(item as { pct: number }).pct}%`
+                : String((item as { note: number }).note);
             return (
               <View key={i} style={styles.chartRow}>
                 <Text style={styles.chartLabel}>{label}</Text>
                 <View style={styles.chartBarBg}>
-                  <View style={[styles.chartBarFill, { width: `${widthPct}%`, backgroundColor: color }]} />
+                  <View
+                    style={[
+                      styles.chartBarFill,
+                      { width: `${widthPct}%`, backgroundColor: color },
+                    ]}
+                  />
                 </View>
                 <Text style={styles.chartValue}>{value}</Text>
               </View>
@@ -131,15 +235,21 @@ function EvaluationPdfDocument({ evaluation }: { evaluation: Evaluation }) {
             const isCustom = Boolean(cq);
             return (
               <View key={i} style={styles.tableRow}>
-                <Text style={styles.col1}>{(q?.critere ?? cq?.critere ?? '') + (isCustom ? ' *' : '')}</Text>
-                <Text style={styles.col2}>{q?.indicateur ?? cq?.indicateur ?? ''}</Text>
-                <Text style={styles.col3}>{q?.texte ?? cq?.texte ?? ''}</Text>
+                <Text style={styles.col1}>
+                  {(q?.critere ?? cq?.critere ?? "") + (isCustom ? " *" : "")}
+                </Text>
+                <Text style={styles.col2}>
+                  {q?.indicateur ?? cq?.indicateur ?? ""}
+                </Text>
+                <Text style={styles.col3}>{q?.texte ?? cq?.texte ?? ""}</Text>
                 <Text style={styles.col4}>{String(r.note)}</Text>
-                <Text style={styles.col5}>{r.commentaireEvaluateur ?? ''}</Text>
+                <Text style={styles.col5}>{r.commentaireEvaluateur ?? ""}</Text>
               </View>
             );
           })}
-          <Text style={{ fontSize: 8, color: '#666', marginTop: 4 }}>* Question personnalisée</Text>
+          <Text style={{ fontSize: 8, color: "#666", marginTop: 4 }}>
+            * Question personnalisée
+          </Text>
         </View>
 
         {evaluation.commentaireConclusion ? (
@@ -162,12 +272,12 @@ export default function EvaluationPdfExport({
   className?: string;
   label?: string;
 }) {
-  if (evaluation.statut !== 'terminee') return null;
-  const type = evaluation.questionnaire?.type ?? 'planification';
+  if (evaluation.statut !== "terminee") return null;
+  const type = evaluation.questionnaire?.type ?? "planification";
   const fileName = formatEvaluationPdfName(
-    evaluation.client?.nomEntreprise ?? 'Client',
+    evaluation.client?.nomEntreprise ?? "Client",
     type,
-    evaluation.dateEvaluation
+    evaluation.dateEvaluation,
   );
   return (
     <PDFDownloadLink
