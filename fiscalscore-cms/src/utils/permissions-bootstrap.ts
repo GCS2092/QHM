@@ -59,6 +59,57 @@ async function setRolePermissions(
   }
 }
 
+/**
+ * Assigne automatiquement le rôle Admin à tout utilisateur dont le
+ * username ou l'email contient "admin" (insensible à la casse).
+ *
+ * Cela couvre les cas fréquents en déploiement :
+ *  - "administrateur", "admin", "admin.qhm", "Admin_QHM", etc.
+ *
+ * Tournant à chaque démarrage Strapi, cette fonction est idempotente :
+ * elle ne modifie que les utilisateurs qui n'ont pas encore le bon rôle.
+ */
+async function assignAdminRoleToAdminUsers(
+  strapi: Core.Strapi,
+  adminRoleId: number,
+) {
+  interface RawUser {
+    id: number;
+    username?: string;
+    email?: string;
+    role?: { id: number } | null;
+  }
+
+  const allUsers = (await strapi.db
+    .query("plugin::users-permissions.user")
+    .findMany({ populate: ["role"] })) as RawUser[];
+
+  const candidates = allUsers.filter((u) => {
+    const name = (u.username ?? "").toLowerCase();
+    const mail = (u.email ?? "").toLowerCase();
+    return name.includes("admin") || mail.includes("admin");
+  });
+
+  let promoted = 0;
+  for (const user of candidates) {
+    const currentRoleId = user.role?.id ?? null;
+    if (currentRoleId !== adminRoleId) {
+      await strapi.db.query("plugin::users-permissions.user").update({
+        where: { id: user.id },
+        data: { role: adminRoleId },
+      });
+      strapi.log.info(
+        `[QHM] Rôle Admin assigné automatiquement → ${user.username ?? user.email}`,
+      );
+      promoted += 1;
+    }
+  }
+
+  if (promoted === 0) {
+    strapi.log.info("[QHM] Aucun utilisateur admin à promouvoir.");
+  }
+}
+
 export async function bootstrapQhmPermissions(strapi: Core.Strapi) {
   const adminRole = await ensureRole(
     strapi,
@@ -104,6 +155,10 @@ export async function bootstrapQhmPermissions(strapi: Core.Strapi) {
       }
     }
   }
+
+  // Auto-promotion : tout utilisateur avec "admin" dans son nom/email
+  // reçoit automatiquement le rôle Admin au démarrage.
+  await assignAdminRoleToAdminUsers(strapi, adminRole.id);
 
   strapi.log.info("[QHM] Rôles Admin et Evaluateur configurés.");
   return { adminRole, evaluatorRole };
