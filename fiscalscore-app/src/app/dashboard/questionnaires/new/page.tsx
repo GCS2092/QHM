@@ -9,6 +9,9 @@ export default function NewQuestionnairePage() {
   const [titre, setTitre] = useState("");
   const [description, setDescription] = useState("");
   const [actif, setActif] = useState(true);
+  const [type, setType] = useState<"planification" | "mission">(
+    "planification",
+  );
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -27,10 +30,15 @@ export default function NewQuestionnairePage() {
         titre: titre.trim(),
         description: description.trim(),
         actif,
+        type,
       });
-      router.push('/dashboard/questionnaires');
-    } catch (error: any) {
-      setFeedback(error?.message ?? "Impossible de creer le questionnaire.");
+      router.push("/dashboard/questionnaires");
+    } catch (error: unknown) {
+      setFeedback(
+        error instanceof Error
+          ? error.message
+          : "Impossible de creer le questionnaire.",
+      );
     } finally {
       setSaving(false);
     }
@@ -39,13 +47,19 @@ export default function NewQuestionnairePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Nouveau questionnaire</h1>
-        <p className="text-sm text-gray-500 mt-1">Creer un nouveau questionnaire fiscal a partager avec vos clients.</p>
+        <h1 className="text-2xl font-bold text-gray-900">
+          Nouveau questionnaire
+        </h1>
+        <p className="text-sm text-gray-500 mt-1">
+          Créer un questionnaire (planification ou mission).
+        </p>
       </div>
       <div className="rounded-3xl border border-gray-100 bg-white p-8 shadow-sm">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Titre</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Titre
+            </label>
             <input
               type="text"
               value={titre}
@@ -55,7 +69,9 @@ export default function NewQuestionnairePage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Description</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Description
+            </label>
             <textarea
               value={description}
               onChange={(event) => setDescription(event.target.value)}
@@ -63,6 +79,21 @@ export default function NewQuestionnairePage() {
               rows={4}
               placeholder="Brève description du questionnaire"
             />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Type
+            </label>
+            <select
+              value={type}
+              onChange={(e) =>
+                setType(e.target.value as "planification" | "mission")
+              }
+              className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+            >
+              <option value="planification">Phase de planification</option>
+              <option value="mission">Pendant la mission</option>
+            </select>
           </div>
           <div className="flex items-center gap-3">
             <input
@@ -72,16 +103,20 @@ export default function NewQuestionnairePage() {
               onChange={(event) => setActif(event.target.checked)}
               className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
-            <label htmlFor="actif" className="text-sm text-gray-700">Actif</label>
+            <label htmlFor="actif" className="text-sm text-gray-700">
+              Actif
+            </label>
           </div>
-          {feedback ? <div className="text-sm text-red-600">{feedback}</div> : null}
+          {feedback ? (
+            <div className="text-sm text-red-600">{feedback}</div>
+          ) : null}
           <div className="flex justify-end">
             <button
               type="submit"
               disabled={saving}
               className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {saving ? 'Creation en cours...' : 'Creer le questionnaire'}
+              {saving ? "Creation en cours..." : "Creer le questionnaire"}
             </button>
           </div>
         </form>

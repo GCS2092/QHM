@@ -33,13 +33,26 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        interface StrapiUser {
+          id: string;
+          name: string;
+          email: string;
+          accessToken: string;
+          role: string | null;
+          strapiUserId: number;
+        }
+
         return {
           id: String(data.user.id),
-          name: data.user.username || data.user.email || `${data.user.firstname ?? ""} ${data.user.lastname ?? ""}`.trim(),
+          name:
+            data.user.username ||
+            data.user.email ||
+            `${data.user.firstname ?? ""} ${data.user.lastname ?? ""}`.trim(),
           email: data.user.email,
           accessToken: data.jwt,
           role: data.user.role?.name ?? null,
-        } as any;
+          strapiUserId: data.user.id,
+        } as StrapiUser;
       },
     }),
   ],
@@ -51,20 +64,30 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user }) {
+      interface ExtendedUser {
+        id: string;
+        accessToken: string;
+        role: string | null;
+      }
+
       if (user) {
+        const extUser = user as unknown as ExtendedUser;
         return {
           ...token,
-          accessToken: (user as any).accessToken,
-          role: (user as any).role,
+          accessToken: extUser.accessToken,
+          role: extUser.role,
+          sub: extUser.id,
         };
       }
       return token;
     },
     async session({ session, token }) {
+      const userSession = session.user as Record<string, unknown>;
       return {
         ...session,
         user: {
-          ...session.user,
+          ...userSession,
+          id: token.sub as string,
           accessToken: token.accessToken as string,
           role: token.role as string,
         },

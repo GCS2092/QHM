@@ -9,11 +9,18 @@ interface QuestionnaireEditFormProps {
   questionnaire: Questionnaire;
 }
 
-export default function QuestionnaireEditForm({ questionnaire }: QuestionnaireEditFormProps) {
+export default function QuestionnaireEditForm({
+  questionnaire,
+}: QuestionnaireEditFormProps) {
   const router = useRouter();
   const [titre, setTitre] = useState(questionnaire.titre ?? "");
-  const [description, setDescription] = useState(questionnaire.description ?? "");
+  const [description, setDescription] = useState(
+    questionnaire.description ?? "",
+  );
   const [actif, setActif] = useState(Boolean(questionnaire.actif));
+  const [type, setType] = useState<"planification" | "mission">(
+    questionnaire.type ?? "planification",
+  );
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -33,10 +40,15 @@ export default function QuestionnaireEditForm({ questionnaire }: QuestionnaireEd
         titre: titre.trim(),
         description: description.trim(),
         actif,
+        type,
       });
       router.push(`/dashboard/questionnaires/${questionnaire.id}`);
-    } catch (error: any) {
-      setFeedback(error?.message ?? "Impossible de mettre à jour le questionnaire.");
+    } catch (err: unknown) {
+      setFeedback(
+        err instanceof Error
+          ? err.message
+          : "Impossible de mettre à jour le questionnaire.",
+      );
     } finally {
       setSaving(false);
     }
@@ -46,7 +58,9 @@ export default function QuestionnaireEditForm({ questionnaire }: QuestionnaireEd
     <div className="rounded-3xl border border-gray-100 bg-white p-8 shadow-sm">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Titre</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Titre
+          </label>
           <input
             type="text"
             value={titre}
@@ -56,7 +70,9 @@ export default function QuestionnaireEditForm({ questionnaire }: QuestionnaireEd
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Description</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Description
+          </label>
           <textarea
             value={description}
             onChange={(event) => setDescription(event.target.value)}
@@ -64,6 +80,25 @@ export default function QuestionnaireEditForm({ questionnaire }: QuestionnaireEd
             rows={4}
             placeholder="Brève description du questionnaire"
           />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Type de questionnaire
+          </label>
+          <select
+            value={type}
+            onChange={(e) =>
+              setType(e.target.value as "planification" | "mission")
+            }
+            className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+          >
+            <option value="planification">
+              Phase de planification (radar, seuils 86/57%)
+            </option>
+            <option value="mission">
+              Pendant la mission (barres, seuils 80/60%)
+            </option>
+          </select>
         </div>
         <div className="flex items-center gap-3">
           <input
@@ -73,9 +108,13 @@ export default function QuestionnaireEditForm({ questionnaire }: QuestionnaireEd
             onChange={(event) => setActif(event.target.checked)}
             className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
           />
-          <label htmlFor="actif" className="text-sm text-gray-700">Actif</label>
+          <label htmlFor="actif" className="text-sm text-gray-700">
+            Actif
+          </label>
         </div>
-        {feedback ? <div className="text-sm text-red-600">{feedback}</div> : null}
+        {feedback ? (
+          <div className="text-sm text-red-600">{feedback}</div>
+        ) : null}
         <div className="flex justify-end">
           <button
             type="submit"

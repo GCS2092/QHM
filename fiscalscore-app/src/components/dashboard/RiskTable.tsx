@@ -2,7 +2,7 @@
 
 type RiskItem = {
   nom: string;
-  score: number;
+  pourcentage: number;
   alerte: string;
 };
 
@@ -14,8 +14,8 @@ export default function RiskTable({ risks }: RiskTableProps) {
   return (
     <div className="bg-white rounded-xl border border-gray-100 p-5">
       <div className="mb-4">
-        <h3 className="font-semibold text-gray-900">Clients a surveiller</h3>
-        <p className="text-xs text-gray-400 mt-0.5">Score inferieur a 50</p>
+        <h3 className="font-semibold text-gray-900">Clients à surveiller</h3>
+        <p className="text-xs text-gray-400 mt-0.5">Seuil rouge (risque comportemental élevé)</p>
       </div>
       {risks && risks.length > 0 ? (
         <div className="space-y-3">
@@ -30,12 +30,12 @@ export default function RiskTable({ risks }: RiskTableProps) {
                   <p className="text-xs text-gray-400">{client.alerte}</p>
                 </div>
               </div>
-              <ScoreBadge score={client.score} />
+              <ScoreBadge pourcentage={client.pourcentage} showLabel={false} />
             </div>
           ))}
         </div>
       ) : (
-        <div className="py-10 text-center text-sm text-gray-500">Aucun client à risque trouvé dans les evaluations actuelles.</div>
+        <div className="py-10 text-center text-sm text-gray-500">Aucun client à risque élevé dans les évaluations actuelles.</div>
       )}
     </div>
   );
