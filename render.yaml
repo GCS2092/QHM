@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: auditude-cms
+    runtime: node
+    rootDir: fiscalscore-cms
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      # DATABASE_CLIENT doit etre "postgres" — sinon Strapi utilise SQLite par defaut
+      - key: DATABASE_CLIENT
+        value: postgres
+      # DATABASE_SSL requis pour la plupart des PostgreSQL heberges (Render, Railway, etc.)
+      - key: DATABASE_SSL
+        value: "true"
+      - key: DATABASE_SSL_REJECT_UNAUTHORIZED
+        value: "false"
+      # Secrets — a renseigner manuellement dans le dashboard Render
+      - key: APP_KEYS
+        sync: false
+      - key: API_TOKEN_SALT
+        sync: false
+      - key: ADMIN_JWT_SECRET
+        sync: false
+      - key: TRANSFER_TOKEN_SALT
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: DATABASE_URL
+        sync: false
