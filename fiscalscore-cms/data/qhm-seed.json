@@ -1,0 +1,237 @@
+{
+  "clients": [
+    {
+      "nomEntreprise": "Société Alpha Audit",
+      "nomResponsable": "Marie Dupont",
+      "email": "m.dupont@alpha-audit.fr",
+      "telephone": "+33 1 23 45 67 89",
+      "secteur": "Industrie",
+      "archive": false
+    },
+    {
+      "nomEntreprise": "Beta Conseil SARL",
+      "nomResponsable": "Jean Martin",
+      "email": "j.martin@beta-conseil.fr",
+      "telephone": "+33 6 12 34 56 78",
+      "secteur": "Services",
+      "archive": false
+    }
+  ],
+  "questionnaires": [
+    {
+      "titre": "Analyse comportementale — Phase de planification",
+      "description": "7 questions de base (score max 21). Seuils : vert ≥86%, orange 57-85%, rouge <57%.",
+      "type": "planification",
+      "actif": true
+    },
+    {
+      "titre": "Analyse comportementale — Pendant la mission",
+      "description": "10 questions de base (score max 30). Seuils : vert ≥80%, orange 60-79%, rouge <60%.",
+      "type": "mission",
+      "actif": true
+    }
+  ],
+  "questions": [
+    {
+      "questionnaireIndex": 0,
+      "ordre": 1,
+      "critere": "Ouverture au dialogue",
+      "indicateur": "Réponses aux sollicitations initiales, ton des échanges",
+      "texte": "Le client répond-il de manière ouverte et constructive aux premiers contacts de planification ?",
+      "commentaireZero": "Non observé lors des premiers échanges.",
+      "commentaireUn": "Réponses tardives, évasives ou défensives.",
+      "commentaireDeux": "Échanges corrects avec quelques réserves.",
+      "commentaireTrois": "Très ouvert, réactif et constructif dès la planification."
+    },
+    {
+      "questionnaireIndex": 0,
+      "ordre": 2,
+      "critere": "Transparence sur les processus",
+      "indicateur": "Volonté de partager l'organisation interne",
+      "texte": "Le client partage-t-il volontiers les informations sur son organisation et ses processus ?",
+      "commentaireZero": "Sans objet à ce stade.",
+      "commentaireUn": "Réticence marquée à expliquer les processus.",
+      "commentaireDeux": "Informations fournies de manière partielle.",
+      "commentaireTrois": "Transparence élevée sur l'organisation et les processus."
+    },
+    {
+      "questionnaireIndex": 0,
+      "ordre": 3,
+      "critere": "Disponibilité des interlocuteurs",
+      "indicateur": "Facilité à obtenir des rendez-vous",
+      "texte": "Les interlocuteurs clés sont-ils disponibles pour les entretiens de planification ?",
+      "commentaireZero": "Non testé.",
+      "commentaireUn": "Disponibilité très limitée ou reports répétés.",
+      "commentaireDeux": "Disponibilité moyenne, quelques contraintes.",
+      "commentaireTrois": "Interlocuteurs très disponibles et impliqués."
+    },
+    {
+      "questionnaireIndex": 0,
+      "ordre": 4,
+      "critere": "Qualité de la documentation fournie",
+      "indicateur": "Complétude et clarté des pièces transmises",
+      "texte": "La documentation transmise en phase de planification est-elle complète et exploitable ?",
+      "commentaireZero": "Aucune documentation transmise encore.",
+      "commentaireUn": "Documentation incomplète ou peu lisible.",
+      "commentaireDeux": "Documentation globalement correcte avec lacunes mineures.",
+      "commentaireTrois": "Documentation complète, structurée et de qualité."
+    },
+    {
+      "questionnaireIndex": 0,
+      "ordre": 5,
+      "critere": "Respect des délais convenus",
+      "indicateur": "Respect du calendrier de planification",
+      "texte": "Le client respecte-t-il les délais convenus pour la remise des éléments de planification ?",
+      "commentaireZero": "Calendrier non encore engagé.",
+      "commentaireUn": "Retards significatifs ou non-respect des échéances.",
+      "commentaireDeux": "Quelques retards ponctuels sans impact majeur.",
+      "commentaireTrois": "Délais systématiquement respectés."
+    },
+    {
+      "questionnaireIndex": 0,
+      "ordre": 6,
+      "critere": "Anticipation des besoins d'audit",
+      "indicateur": "Proactivité dans la préparation",
+      "texte": "Le client anticipe-t-il les besoins de l'équipe d'audit (données, contacts, contraintes) ?",
+      "commentaireZero": "Non observable.",
+      "commentaireUn": "Aucune anticipation, attitude passive.",
+      "commentaireDeux": "Anticipation partielle sur certains points.",
+      "commentaireTrois": "Forte proactivité et préparation soignée."
+    },
+    {
+      "questionnaireIndex": 0,
+      "ordre": 7,
+      "critere": "Climat relationnel",
+      "indicateur": "Ton général des échanges",
+      "texte": "Le climat relationnel observé en planification est-il favorable à une mission fluide ?",
+      "commentaireZero": "Pas d'échange suffisant.",
+      "commentaireUn": "Climat tendu ou conflictuel.",
+      "commentaireDeux": "Climat neutre, professionnel.",
+      "commentaireTrois": "Climat très coopératif et confiant."
+    },
+    {
+      "questionnaireIndex": 1,
+      "ordre": 1,
+      "critere": "Réactivité aux demandes",
+      "indicateur": "Délai de réponse aux sollicitations",
+      "texte": "Le client répond-il rapidement aux demandes d'information pendant la mission ?",
+      "commentaireZero": "Non observé.",
+      "commentaireUn": "Réponses très lentes ou absentes.",
+      "commentaireDeux": "Réactivité variable selon les demandes.",
+      "commentaireTrois": "Réponses rapides et systématiques."
+    },
+    {
+      "questionnaireIndex": 1,
+      "ordre": 2,
+      "critere": "Fiabilité des informations",
+      "indicateur": "Cohérence des réponses et pièces",
+      "texte": "Les informations fournies en mission sont-elles fiables et cohérentes ?",
+      "commentaireZero": "Sans objet.",
+      "commentaireUn": "Incohérences ou informations peu fiables.",
+      "commentaireDeux": "Globalement fiable avec quelques imprécisions.",
+      "commentaireTrois": "Informations très fiables et cohérentes."
+    },
+    {
+      "questionnaireIndex": 1,
+      "ordre": 3,
+      "critere": "Coopération des équipes",
+      "indicateur": "Implication des collaborateurs",
+      "texte": "Les équipes du client coopèrent-elles activement avec l'équipe d'audit ?",
+      "commentaireZero": "Non observé.",
+      "commentaireUn": "Coopération faible, résistance fréquente.",
+      "commentaireDeux": "Coopération correcte sur la plupart des sujets.",
+      "commentaireTrois": "Coopération exemplaire de toutes les équipes."
+    },
+    {
+      "questionnaireIndex": 1,
+      "ordre": 4,
+      "critere": "Respect des engagements",
+      "indicateur": "Tenue des promesses et délais",
+      "texte": "Le client tient-il ses engagements (délais, documents, points d'action) pendant la mission ?",
+      "commentaireZero": "Sans objet.",
+      "commentaireUn": "Engagements souvent non tenus.",
+      "commentaireDeux": "Engagements tenus dans l'ensemble avec écarts ponctuels.",
+      "commentaireTrois": "Engagements tenus de manière rigoureuse."
+    },
+    {
+      "questionnaireIndex": 1,
+      "ordre": 5,
+      "critere": "Gestion des points sensibles",
+      "indicateur": "Attitude face aux sujets délicats",
+      "texte": "Comment le client gère-t-il les points sensibles ou les demandes de précision ?",
+      "commentaireZero": "Aucun point sensible abordé.",
+      "commentaireUn": "Évitement, minimisation ou opposition.",
+      "commentaireDeux": "Gestion correcte avec parfois de la tension.",
+      "commentaireTrois": "Gestion transparente et constructive des sujets sensibles."
+    },
+    {
+      "questionnaireIndex": 1,
+      "ordre": 6,
+      "critere": "Qualité des justificatifs",
+      "indicateur": "Pertinence et traçabilité des pièces",
+      "texte": "Les justificatifs remis en cours de mission sont-ils pertinents et traçables ?",
+      "commentaireZero": "Non applicable.",
+      "commentaireUn": "Justificatifs insuffisants ou difficiles à exploiter.",
+      "commentaireDeux": "Justificatifs globalement exploitables.",
+      "commentaireTrois": "Justificatifs complets et de haute qualité."
+    },
+    {
+      "questionnaireIndex": 1,
+      "ordre": 7,
+      "critere": "Communication formelle",
+      "indicateur": "Clarté des échanges écrits",
+      "texte": "Les échanges écrits (courriels, notes) sont-ils clairs et professionnels ?",
+      "commentaireZero": "Non observé.",
+      "commentaireUn": "Communications confuses ou incomplètes.",
+      "commentaireDeux": "Communications correctes.",
+      "commentaireTrois": "Communications claires, structurées et professionnelles."
+    },
+    {
+      "questionnaireIndex": 1,
+      "ordre": 8,
+      "critere": "Adaptabilité aux ajustements",
+      "indicateur": "Flexibilité face aux demandes complémentaires",
+      "texte": "Le client s'adapte-t-il aux demandes complémentaires ou aux ajustements de mission ?",
+      "commentaireZero": "Sans objet.",
+      "commentaireUn": "Forte résistance aux ajustements.",
+      "commentaireDeux": "Adaptabilité moyenne.",
+      "commentaireTrois": "Grande flexibilité et adaptabilité."
+    },
+    {
+      "questionnaireIndex": 1,
+      "ordre": 9,
+      "critere": "Implication de la direction",
+      "indicateur": "Disponibilité et soutien de la direction",
+      "texte": "La direction soutient-elle visiblement le déroulement de la mission ?",
+      "commentaireZero": "Non observable.",
+      "commentaireUn": "Direction peu impliquée ou inaccessible.",
+      "commentaireDeux": "Implication ponctuelle de la direction.",
+      "commentaireTrois": "Direction très impliquée et soutien actif."
+    },
+    {
+      "questionnaireIndex": 1,
+      "ordre": 10,
+      "critere": "Bilan comportemental global",
+      "indicateur": "Synthèse du comportement observé en mission",
+      "texte": "Dans l'ensemble, le comportement du client en mission favorise-t-il la qualité des travaux d'audit ?",
+      "commentaireZero": "Mission non assez avancée.",
+      "commentaireUn": "Comportement global défavorable aux travaux.",
+      "commentaireDeux": "Comportement globalement acceptable avec points de vigilance.",
+      "commentaireTrois": "Comportement très favorable à une mission de qualité."
+    }
+  ],
+  "users": {
+    "admin": {
+      "username": "admin.qhm",
+      "email": "admin@qhm.local",
+      "password": "AdminQhm2026!",
+      "role": "Admin"
+    },
+    "evaluateur": {
+      "username": "evaluateur.qhm",
+      "email": "evaluateur@qhm.local",
+      "password": "EvalQhm2026!",
+      "role": "Evaluateur"
+    }
+  }
+}

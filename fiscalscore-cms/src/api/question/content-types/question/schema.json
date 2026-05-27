@@ -8,7 +8,7 @@
     "description": "Single questionnaire question"
   },
   "options": {
-    "draftAndPublish": true
+    "draftAndPublish": false
   },
   "pluginOptions": {},
   "attributes": {
@@ -16,9 +16,26 @@
       "type": "text",
       "required": true
     },
-    "coefficient": {
-      "type": "integer",
-      "default": 1
+    "critere": {
+      "type": "string"
+    },
+    "indicateur": {
+      "type": "text"
+    },
+    "ordre": {
+      "type": "integer"
+    },
+    "commentaireZero": {
+      "type": "text"
+    },
+    "commentaireUn": {
+      "type": "text"
+    },
+    "commentaireDeux": {
+      "type": "text"
+    },
+    "commentaireTrois": {
+      "type": "text"
     },
     "questionnaire": {
       "type": "relation",

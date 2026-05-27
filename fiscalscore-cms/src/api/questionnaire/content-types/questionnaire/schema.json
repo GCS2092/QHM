@@ -8,7 +8,7 @@
     "description": "Fiscal questionnaire"
   },
   "options": {
-    "draftAndPublish": true
+    "draftAndPublish": false
   },
   "pluginOptions": {},
   "attributes": {
@@ -18,6 +18,11 @@
     },
     "description": {
       "type": "text"
+    },
+    "type": {
+      "type": "enumeration",
+      "enum": ["planification", "mission"],
+      "default": "planification"
     },
     "actif": {
       "type": "boolean",

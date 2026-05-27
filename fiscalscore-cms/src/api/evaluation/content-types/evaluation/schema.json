@@ -8,16 +8,24 @@
     "description": "Fiscal evaluation record"
   },
   "options": {
-    "draftAndPublish": true
+    "draftAndPublish": false
   },
   "pluginOptions": {},
   "attributes": {
-    "score": {
+    "scoreFinal": {
       "type": "integer",
       "required": true,
       "default": 0
     },
-    "date": {
+    "scoreMaxReel": {
+      "type": "integer",
+      "default": 0
+    },
+    "pourcentageScore": {
+      "type": "integer",
+      "default": 0
+    },
+    "dateEvaluation": {
       "type": "date",
       "required": true
     },
@@ -25,8 +33,21 @@
       "type": "string",
       "required": true
     },
-    "commentaire": {
+    "evaluateurUtilisateur": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "commentaireGlobal": {
       "type": "text"
+    },
+    "commentaireConclusion": {
+      "type": "text"
+    },
+    "statut": {
+      "type": "enumeration",
+      "enum": ["en_cours", "terminee"],
+      "default": "en_cours"
     },
     "client": {
       "type": "relation",
@@ -39,6 +60,18 @@
       "relation": "manyToOne",
       "target": "api::questionnaire.questionnaire",
       "inversedBy": "evaluations"
+    },
+    "reponses": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::reponse.reponse",
+      "mappedBy": "evaluation"
+    },
+    "questions_custom": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::question-custom.question-custom",
+      "mappedBy": "evaluation"
     }
   }
 }

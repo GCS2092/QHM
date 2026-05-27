@@ -1,0 +1,41 @@
+{
+  "kind": "collectionType",
+  "collectionName": "reponses",
+  "info": {
+    "singularName": "reponse",
+    "pluralName": "reponses",
+    "displayName": "Reponse",
+    "description": "Evaluation response to a base or custom question"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "evaluation": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::evaluation.evaluation",
+      "inversedBy": "reponses"
+    },
+    "question": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::question.question"
+    },
+    "questionCustom": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::question-custom.question-custom"
+    },
+    "note": {
+      "type": "integer",
+      "required": true,
+      "min": 0,
+      "max": 3
+    },
+    "commentaireEvaluateur": {
+      "type": "text"
+    }
+  }
+}

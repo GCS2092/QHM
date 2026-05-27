@@ -546,6 +546,40 @@ export interface ApiArticleArticle extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiAssignationAssignation extends Struct.CollectionTypeSchema {
+  collectionName: 'assignations';
+  info: {
+    description: 'Client assignment to an evaluator';
+    displayName: 'Assignation';
+    pluralName: 'assignations';
+    singularName: 'assignation';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    client: Schema.Attribute.Relation<'manyToOne', 'api::client.client'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    dateAssignation: Schema.Attribute.Date & Schema.Attribute.Required;
+    evaluateur: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::assignation.assignation'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiAuthorAuthor extends Struct.CollectionTypeSchema {
   collectionName: 'authors';
   info: {
@@ -619,9 +653,14 @@ export interface ApiClientClient extends Struct.CollectionTypeSchema {
     singularName: 'client';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
+    archive: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    assignations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::assignation.assignation'
+    >;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -630,23 +669,16 @@ export interface ApiClientClient extends Struct.CollectionTypeSchema {
       'oneToMany',
       'api::evaluation.evaluation'
     >;
-    identifiantFiscal: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.Unique;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::client.client'
     > &
       Schema.Attribute.Private;
-    nom: Schema.Attribute.String & Schema.Attribute.Required;
-    prenom: Schema.Attribute.String & Schema.Attribute.Required;
+    nomEntreprise: Schema.Attribute.String & Schema.Attribute.Required;
+    nomResponsable: Schema.Attribute.String & Schema.Attribute.Required;
     publishedAt: Schema.Attribute.DateTime;
-    score: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
-    statut: Schema.Attribute.Enumeration<
-      ['Critique', 'Risque \u00E9lev\u00E9', 'Moyen', 'Bon', 'Excellent']
-    > &
-      Schema.Attribute.DefaultTo<'Moyen'>;
+    secteur: Schema.Attribute.String;
     telephone: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -663,30 +695,44 @@ export interface ApiEvaluationEvaluation extends Struct.CollectionTypeSchema {
     singularName: 'evaluation';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     client: Schema.Attribute.Relation<'manyToOne', 'api::client.client'>;
-    commentaire: Schema.Attribute.Text;
+    commentaireConclusion: Schema.Attribute.Text;
+    commentaireGlobal: Schema.Attribute.Text;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    date: Schema.Attribute.Date & Schema.Attribute.Required;
+    dateEvaluation: Schema.Attribute.Date & Schema.Attribute.Required;
     evaluateur: Schema.Attribute.String & Schema.Attribute.Required;
+    evaluateurUtilisateur: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::evaluation.evaluation'
     > &
       Schema.Attribute.Private;
+    pourcentageScore: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     publishedAt: Schema.Attribute.DateTime;
     questionnaire: Schema.Attribute.Relation<
       'manyToOne',
       'api::questionnaire.questionnaire'
     >;
-    score: Schema.Attribute.Integer &
+    questions_custom: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::question-custom.question-custom'
+    >;
+    reponses: Schema.Attribute.Relation<'oneToMany', 'api::reponse.reponse'>;
+    scoreFinal: Schema.Attribute.Integer &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<0>;
+    scoreMaxReel: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    statut: Schema.Attribute.Enumeration<['en_cours', 'terminee']> &
+      Schema.Attribute.DefaultTo<'en_cours'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -725,6 +771,43 @@ export interface ApiGlobalGlobal extends Struct.SingleTypeSchema {
   };
 }
 
+export interface ApiQuestionCustomQuestionCustom
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'question_customs';
+  info: {
+    description: 'Custom question added during an evaluation';
+    displayName: 'Question custom';
+    pluralName: 'question-customs';
+    singularName: 'question-custom';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    critere: Schema.Attribute.String & Schema.Attribute.Required;
+    evaluation: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::evaluation.evaluation'
+    >;
+    indicateur: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::question-custom.question-custom'
+    > &
+      Schema.Attribute.Private;
+    ordre: Schema.Attribute.Integer;
+    publishedAt: Schema.Attribute.DateTime;
+    texte: Schema.Attribute.Text & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiQuestionQuestion extends Struct.CollectionTypeSchema {
   collectionName: 'questions';
   info: {
@@ -734,19 +817,25 @@ export interface ApiQuestionQuestion extends Struct.CollectionTypeSchema {
     singularName: 'question';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
-    coefficient: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<1>;
+    commentaireDeux: Schema.Attribute.Text;
+    commentaireTrois: Schema.Attribute.Text;
+    commentaireUn: Schema.Attribute.Text;
+    commentaireZero: Schema.Attribute.Text;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    critere: Schema.Attribute.String;
+    indicateur: Schema.Attribute.Text;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::question.question'
     > &
       Schema.Attribute.Private;
+    ordre: Schema.Attribute.Integer;
     publishedAt: Schema.Attribute.DateTime;
     questionnaire: Schema.Attribute.Relation<
       'manyToOne',
@@ -769,7 +858,7 @@ export interface ApiQuestionnaireQuestionnaire
     singularName: 'questionnaire';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     actif: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
@@ -790,6 +879,55 @@ export interface ApiQuestionnaireQuestionnaire
     publishedAt: Schema.Attribute.DateTime;
     questions: Schema.Attribute.Relation<'oneToMany', 'api::question.question'>;
     titre: Schema.Attribute.String & Schema.Attribute.Required;
+    type: Schema.Attribute.Enumeration<['planification', 'mission']> &
+      Schema.Attribute.DefaultTo<'planification'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiReponseReponse extends Struct.CollectionTypeSchema {
+  collectionName: 'reponses';
+  info: {
+    description: 'Evaluation response to a base or custom question';
+    displayName: 'Reponse';
+    pluralName: 'reponses';
+    singularName: 'reponse';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    commentaireEvaluateur: Schema.Attribute.Text;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    evaluation: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::evaluation.evaluation'
+    >;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::reponse.reponse'
+    > &
+      Schema.Attribute.Private;
+    note: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 3;
+          min: 0;
+        },
+        number
+      >;
+    publishedAt: Schema.Attribute.DateTime;
+    question: Schema.Attribute.Relation<'manyToOne', 'api::question.question'>;
+    questionCustom: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::question-custom.question-custom'
+    >;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1310,13 +1448,16 @@ declare module '@strapi/strapi' {
       'admin::user': AdminUser;
       'api::about.about': ApiAboutAbout;
       'api::article.article': ApiArticleArticle;
+      'api::assignation.assignation': ApiAssignationAssignation;
       'api::author.author': ApiAuthorAuthor;
       'api::category.category': ApiCategoryCategory;
       'api::client.client': ApiClientClient;
       'api::evaluation.evaluation': ApiEvaluationEvaluation;
       'api::global.global': ApiGlobalGlobal;
+      'api::question-custom.question-custom': ApiQuestionCustomQuestionCustom;
       'api::question.question': ApiQuestionQuestion;
       'api::questionnaire.questionnaire': ApiQuestionnaireQuestionnaire;
+      'api::reponse.reponse': ApiReponseReponse;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
       'plugin::i18n.locale': PluginI18NLocale;

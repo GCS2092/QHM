@@ -1,0 +1,31 @@
+{
+  "kind": "collectionType",
+  "collectionName": "assignations",
+  "info": {
+    "singularName": "assignation",
+    "pluralName": "assignations",
+    "displayName": "Assignation",
+    "description": "Client assignment to an evaluator"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "client": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::client.client",
+      "inversedBy": "assignations"
+    },
+    "evaluateur": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "dateAssignation": {
+      "type": "date",
+      "required": true
+    }
+  }
+}

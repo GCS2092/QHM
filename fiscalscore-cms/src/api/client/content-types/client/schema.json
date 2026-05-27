@@ -8,22 +8,17 @@
     "description": "Fiscal client record"
   },
   "options": {
-    "draftAndPublish": true
+    "draftAndPublish": false
   },
   "pluginOptions": {},
   "attributes": {
-    "nom": {
+    "nomEntreprise": {
       "type": "string",
       "required": true
     },
-    "prenom": {
+    "nomResponsable": {
       "type": "string",
       "required": true
-    },
-    "identifiantFiscal": {
-      "type": "string",
-      "required": true,
-      "unique": true
     },
     "email": {
       "type": "email"
@@ -31,14 +26,18 @@
     "telephone": {
       "type": "string"
     },
-    "score": {
-      "type": "integer",
-      "default": 0
+    "secteur": {
+      "type": "string"
     },
-    "statut": {
-      "type": "enumeration",
-      "enum": ["Critique", "Risque élevé", "Moyen", "Bon", "Excellent"],
-      "default": "Moyen"
+    "archive": {
+      "type": "boolean",
+      "default": false
+    },
+    "assignations": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::assignation.assignation",
+      "mappedBy": "client"
     },
     "evaluations": {
       "type": "relation",

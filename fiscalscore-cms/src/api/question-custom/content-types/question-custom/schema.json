@@ -1,0 +1,36 @@
+{
+  "kind": "collectionType",
+  "collectionName": "question_customs",
+  "info": {
+    "singularName": "question-custom",
+    "pluralName": "question-customs",
+    "displayName": "Question custom",
+    "description": "Custom question added during an evaluation"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "evaluation": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::evaluation.evaluation",
+      "inversedBy": "questions_custom"
+    },
+    "critere": {
+      "type": "string",
+      "required": true
+    },
+    "indicateur": {
+      "type": "text"
+    },
+    "texte": {
+      "type": "text",
+      "required": true
+    },
+    "ordre": {
+      "type": "integer"
+    }
+  }
+}
