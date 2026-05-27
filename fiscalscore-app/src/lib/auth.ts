@@ -33,6 +33,24 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        // Strapi v5 ne renvoie pas le role dans /api/auth/local.
+        // On le recupere explicitement via /api/users/me?populate=role.
+        let roleName: string | null = data.user.role?.name ?? null;
+        if (!roleName) {
+          try {
+            const meRes = await fetch(
+              `${STRAPI_URL}/api/users/me?populate=role`,
+              { headers: { Authorization: `Bearer ${data.jwt}` } },
+            );
+            if (meRes.ok) {
+              const meData = await meRes.json();
+              roleName = meData.role?.name ?? null;
+            }
+          } catch {
+            // role reste null, l'app fonctionnera en mode evaluateur
+          }
+        }
+
         interface StrapiUser {
           id: string;
           name: string;
@@ -50,7 +68,7 @@ export const authOptions: NextAuthOptions = {
             `${data.user.firstname ?? ""} ${data.user.lastname ?? ""}`.trim(),
           email: data.user.email,
           accessToken: data.jwt,
-          role: data.user.role?.name ?? null,
+          role: roleName,
           strapiUserId: data.user.id,
         } as StrapiUser;
       },

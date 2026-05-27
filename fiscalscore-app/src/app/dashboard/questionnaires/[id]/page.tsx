@@ -7,8 +7,19 @@ import { useSession } from "next-auth/react";
 import { getQuestionnaireById } from "@/lib/api";
 import { isAdminRole } from "@/lib/scoring";
 import type { Questionnaire } from "@/lib/types";
-import QuestionnairePdfExport from "@/components/questionnaires/QuestionnairePdfExport";
+import dynamic from "next/dynamic";
 import QuestionsAdmin from "@/components/questionnaires/QuestionsAdmin";
+
+// @react-pdf/renderer necessite un import dynamique sans SSR
+const QuestionnairePdfExport = dynamic(
+  () => import("@/components/questionnaires/QuestionnairePdfExport"),
+  {
+    ssr: false,
+    loading: () => (
+      <span className="text-sm text-gray-400">Préparation PDF…</span>
+    ),
+  },
+);
 
 export default function QuestionnaireDetailPage() {
   const params = useParams();

@@ -7,10 +7,18 @@ import { useSession } from "next-auth/react";
 import { getEvaluationById } from "@/lib/api";
 import { getSeuil, seuilColorClass, isAdminRole } from "@/lib/scoring";
 import ScoreBadge from "@/components/ui-custom/ScoreBadge";
+import dynamic from "next/dynamic";
 import EvaluationCharts from "@/components/evaluations/EvaluationCharts";
-import EvaluationPdfExport from "@/components/evaluations/EvaluationPdfExport";
 import EvaluationAdminFullEdit from "@/components/evaluations/EvaluationAdminFullEdit";
 import { commentaireAutoForNote } from "@/lib/commentaires-auto";
+
+const EvaluationPdfExport = dynamic(
+  () => import("@/components/evaluations/EvaluationPdfExport"),
+  {
+    ssr: false,
+    loading: () => <span className="text-xs text-gray-400">PDF…</span>,
+  },
+);
 import type { Evaluation } from "@/lib/types";
 
 export default function EvaluationDetailPage() {

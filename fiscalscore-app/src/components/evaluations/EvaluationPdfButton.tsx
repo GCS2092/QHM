@@ -1,9 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { getEvaluationById } from "@/lib/api";
 import type { Evaluation } from "@/lib/types";
-import EvaluationPdfExport from "./EvaluationPdfExport";
+
+// @react-pdf/renderer utilise des APIs browser (Blob, Canvas).
+// Le dynamic import avec ssr:false empeche le crash cote serveur.
+const EvaluationPdfExport = dynamic(() => import("./EvaluationPdfExport"), {
+  ssr: false,
+  loading: () => <span className="text-xs text-gray-400">PDF…</span>,
+});
 
 type Props = {
   evaluationId: number;
