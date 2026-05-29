@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { createClient } from "@/lib/api";
 
 export default function NewClientPage() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [nomEntreprise, setNomEntreprise] = useState("");
   const [nomResponsable, setNomResponsable] = useState("");
   const [telephone, setTelephone] = useState("");
@@ -18,7 +20,7 @@ export default function NewClientPage() {
     event.preventDefault();
     if (!nomEntreprise.trim() || !nomResponsable.trim()) {
       setFeedback(
-        "Le nom de l&apos;entreprise et le nom du responsable sont obligatoires.",
+        "Le nom de l'entreprise et le nom du responsable sont obligatoires.",
       );
       return;
     }
@@ -27,13 +29,17 @@ export default function NewClientPage() {
     setFeedback(null);
 
     try {
-      await createClient({
-        nomEntreprise: nomEntreprise.trim(),
-        nomResponsable: nomResponsable.trim(),
-        email: email.trim() || undefined,
-        telephone: telephone.trim() || undefined,
-        secteur: secteur.trim() || undefined,
-      });
+      const tkn = (session?.user as { accessToken?: string })?.accessToken;
+      await createClient(
+        {
+          nomEntreprise: nomEntreprise.trim(),
+          nomResponsable: nomResponsable.trim(),
+          email: email.trim() || undefined,
+          telephone: telephone.trim() || undefined,
+          secteur: secteur.trim() || undefined,
+        },
+        tkn,
+      );
       router.push("/dashboard/clients");
     } catch (error: unknown) {
       setFeedback(
