@@ -41,7 +41,6 @@ export default function QuestionsAdmin({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // When questions change, schedule a state reset for next render
     const timer = setTimeout(() => {
       setLocalSorted(null);
     }, 0);
@@ -102,7 +101,7 @@ export default function QuestionsAdmin({
     }
   }
 
-  async function handleDelete(id: number) {
+  async function handleDelete(id: number | string) {
     if (!confirm("Supprimer cette question ?")) return;
     try {
       await deleteQuestion(id);
@@ -250,7 +249,7 @@ export default function QuestionsAdmin({
       <ul className="space-y-2">
         {displayedQuestions.map((q, idx) => (
           <li
-            key={q.id}
+            key={String(q.id)}
             draggable
             onDragStart={() => onDragStart(idx)}
             onDragOver={(e) => onDragOver(e, idx)}
