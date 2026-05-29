@@ -20,9 +20,9 @@ function token(override?: string) {
   return override ?? authToken;
 }
 
-// Raw data interfaces from Strapi
 interface RawQuestionCustom {
-  id: number | string;
+  id?: number | string;
+  documentId?: string;
   critere?: string;
   indicateur?: string;
   texte?: string;
@@ -31,6 +31,7 @@ interface RawQuestionCustom {
 
 interface RawQuestion {
   id?: number | string;
+  documentId?: string;
   texte?: string;
   critere?: string;
   indicateur?: string;
@@ -39,13 +40,13 @@ interface RawQuestion {
   commentaireUn?: string;
   commentaireDeux?: string;
   commentaireTrois?: string;
-  questionnaire?: { id: number | string; titre?: string };
+  questionnaire?: { id?: number | string; documentId?: string; titre?: string };
 }
 
 function normalizeQuestion(item: unknown): Question {
   const rawItem = item as RawQuestion;
   return {
-    id: Number(rawItem?.id ?? 0),
+    id: rawItem?.documentId ?? rawItem?.id ?? 0,
     texte: rawItem?.texte ?? "",
     critere: rawItem?.critere,
     indicateur: rawItem?.indicateur,
@@ -56,7 +57,7 @@ function normalizeQuestion(item: unknown): Question {
     commentaireTrois: rawItem?.commentaireTrois,
     questionnaire: rawItem?.questionnaire
       ? {
-          id: Number(rawItem.questionnaire.id),
+          id: rawItem.questionnaire.documentId ?? rawItem.questionnaire.id ?? 0,
           titre: rawItem.questionnaire.titre,
         }
       : undefined,
@@ -65,6 +66,7 @@ function normalizeQuestion(item: unknown): Question {
 
 interface RawResponse {
   id?: number | string;
+  documentId?: string;
   note?: number | string;
   commentaireEvaluateur?: string;
   question?: RawQuestion;
@@ -76,7 +78,7 @@ function normalizeResponse(item: unknown): Response {
   const rawItem = item as RawResponse;
   const qc = rawItem?.question_custom ?? rawItem?.questionCustom;
   return {
-    id: Number(rawItem?.id ?? 0),
+    id: rawItem?.documentId ?? rawItem?.id ?? 0,
     note: Number(rawItem?.note ?? 0),
     commentaireEvaluateur: rawItem?.commentaireEvaluateur,
     question: rawItem?.question
@@ -84,7 +86,7 @@ function normalizeResponse(item: unknown): Response {
       : undefined,
     questionCustom: qc
       ? {
-          id: Number(qc.id),
+          id: qc.documentId ?? qc.id ?? 0,
           critere: qc.critere ?? "",
           indicateur: qc.indicateur,
           texte: qc.texte ?? "",
@@ -97,6 +99,7 @@ function normalizeResponse(item: unknown): Response {
 interface RawAssignation {
   evaluateur?: {
     id?: number | string;
+    documentId?: string;
     username?: string;
     email?: string;
     role?: { name?: string };
@@ -105,6 +108,7 @@ interface RawAssignation {
 
 interface RawClient {
   id?: number | string;
+  documentId?: string;
   nomEntreprise?: string;
   nom?: string;
   nomResponsable?: string;
@@ -121,6 +125,7 @@ interface RawClient {
 
 interface RawQuestionnaire {
   id?: number | string;
+  documentId?: string;
   titre?: string;
   description?: string;
   actif?: boolean;
@@ -131,6 +136,7 @@ interface RawQuestionnaire {
 
 interface RawEvaluation {
   id?: number | string;
+  documentId?: string;
   scoreFinal?: number | string;
   score?: number | string;
   scoreMaxReel?: number | string;
@@ -138,7 +144,7 @@ interface RawEvaluation {
   dateEvaluation?: string;
   date?: string;
   evaluateur?: string;
-  evaluateurUtilisateur?: { id?: number | string } | number | string | null;
+  evaluateurUtilisateur?: { id?: number | string; documentId?: string } | number | string | null;
   commentaireGlobal?: string;
   commentaire?: string;
   commentaireConclusion?: string;
@@ -152,7 +158,7 @@ interface RawEvaluation {
 function normalizeClient(item: unknown): Client {
   const rawItem = item as RawClient;
   return {
-    id: Number(rawItem?.id ?? 0),
+    id: rawItem?.documentId ?? rawItem?.id ?? 0,
     nomEntreprise: rawItem?.nomEntreprise ?? rawItem?.nom ?? "",
     nomResponsable: rawItem?.nomResponsable ?? rawItem?.prenom ?? "",
     email: rawItem?.email,
@@ -164,7 +170,7 @@ function normalizeClient(item: unknown): Client {
       ? rawItem.assignations.filter(Boolean).map((a: unknown) => {
           const rawA = a as RawAssignation;
           return {
-            id: Number(rawA.evaluateur?.id),
+            id: rawA.evaluateur?.documentId ?? rawA.evaluateur?.id ?? 0,
             username:
               rawA.evaluateur?.username ??
               rawA.evaluateur?.email ??
@@ -189,7 +195,7 @@ function normalizeQuestionnaire(item: unknown): Questionnaire {
         .sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0))
     : [];
   return {
-    id: Number(rawItem?.id ?? 0),
+    id: rawItem?.documentId ?? rawItem?.id ?? 0,
     titre: rawItem?.titre?.trim() ? rawItem.titre : "Questionnaire sans titre",
     description: rawItem?.description,
     actif: Boolean(rawItem?.actif),
@@ -204,13 +210,19 @@ function normalizeQuestionnaire(item: unknown): Questionnaire {
 function normalizeEvaluation(item: unknown): Evaluation {
   const rawItem = item as RawEvaluation;
   const rawEvalUser = rawItem?.evaluateurUtilisateur;
-  const evaluateurUtilisateurId = rawEvalUser
-    ? typeof rawEvalUser === "object"
-      ? Number((rawEvalUser as { id?: number | string }).id) || undefined
-      : Number(rawEvalUser) || undefined
-    : undefined;
+
+  let evaluateurUtilisateurId: number | string | undefined;
+  if (rawEvalUser == null) {
+    evaluateurUtilisateurId = undefined;
+  } else if (typeof rawEvalUser === "object") {
+    const obj = rawEvalUser as { documentId?: string; id?: number | string };
+    evaluateurUtilisateurId = obj.documentId ?? (Number(obj.id) || undefined);
+  } else {
+    evaluateurUtilisateurId = Number(rawEvalUser) || undefined;
+  }
+
   return {
-    id: Number(rawItem?.id ?? 0),
+    id: rawItem?.documentId ?? rawItem?.id ?? 0,
     scoreFinal: Number(rawItem?.scoreFinal ?? rawItem?.score ?? 0),
     scoreMaxReel: Number(rawItem?.scoreMaxReel ?? 0),
     pourcentageScore: Number(rawItem?.pourcentageScore ?? 0),
@@ -231,7 +243,7 @@ function normalizeEvaluation(item: unknown): Evaluation {
       ? rawItem.questions_custom.filter(Boolean).map((question: unknown) => {
           const rawQ = question as RawQuestionCustom;
           return {
-            id: Number(rawQ.id),
+            id: rawQ.documentId ?? rawQ.id ?? 0,
             critere: rawQ.critere ?? "",
             indicateur: rawQ.indicateur,
             texte: rawQ.texte ?? "",
@@ -241,7 +253,6 @@ function normalizeEvaluation(item: unknown): Evaluation {
       : [],
   };
 }
-
 export async function getClients(tkn?: string): Promise<Client[]> {
   const res = await strapiGet(
     "/clients",
@@ -292,7 +303,7 @@ export async function updateClient(
   return strapiPut(`/clients/${id}`, data, token(tkn));
 }
 
-export async function deleteClient(id: number, tkn?: string) {
+export async function deleteClient(id: number | string, tkn?: string) {
   return strapiDelete(`/clients/${id}`, token(tkn));
 }
 
@@ -335,7 +346,7 @@ export async function updateQuestionnaire(
   return strapiPut(`/questionnaires/${id}`, data, token(tkn));
 }
 
-export async function deleteQuestionnaire(id: number, tkn?: string) {
+export async function deleteQuestionnaire(id: number | string, tkn?: string) {
   return strapiDelete(`/questionnaires/${id}`, token(tkn));
 }
 
@@ -423,14 +434,20 @@ export async function getAnalyticsSummary(
     return seuil.couleur === "vert";
   }).length;
 
-  const riskMap = new Map<
-    number,
-    { nom: string; pourcentage: number; alerte: string }
-  >();
-  const monthlyStats = new Map<
-    string,
-    { label: string; total: number; count: number }
-  >();
+  interface RiskEntry {
+  nom: string;
+  pourcentage: number;
+  alerte: string;
+}
+
+interface MonthlyEntry {
+  label: string;
+  total: number;
+  count: number;
+}
+
+const riskMap: Map<string, RiskEntry> = new Map();
+const monthlyStats: Map<string, MonthlyEntry> = new Map();
   const formatter = new Intl.DateTimeFormat("fr-FR", { month: "short" });
 
   evaluations.forEach((item: unknown) => {
@@ -440,10 +457,10 @@ export async function getAnalyticsSummary(
     const seuil = getSeuil(pct, type);
     const client = rawItem?.client;
     if (client?.id != null && seuil.couleur === "rouge") {
-      const clientIdNum = Number(client.id);
-      if (!riskMap.has(clientIdNum)) {
+      const clientKey = String(client.documentId ?? client.id);
+      if (!riskMap.has(clientKey)) {
         const nom = client.nomEntreprise ?? client.nom ?? "Client inconnu";
-        riskMap.set(clientIdNum, {
+        riskMap.set(clientKey, {
           nom,
           pourcentage: pct,
           alerte: seuil.label,
@@ -511,11 +528,13 @@ export async function createQuestionnaire(
 }
 
 interface RawAssignationData {
-  id: number | string;
+  id?: number | string;
+  documentId?: string;
   client?: RawClient | number;
   evaluateur?:
     | {
-        id: number | string;
+        id?: number | string;
+        documentId?: string;
         username?: string;
         email?: string;
         role?: { name?: string };
@@ -534,20 +553,16 @@ export async function getAssignations(tkn?: string): Promise<Assignation[]> {
     const clientId =
       typeof rawA.client === "number"
         ? rawA.client
-        : rawA.client?.id
-          ? Number(rawA.client.id)
-          : 0;
+        : rawA.client?.documentId ?? rawA.client?.id ?? 0;
     const evaluateurObj =
       typeof rawA.evaluateur === "number" ? undefined : rawA.evaluateur;
     const evaluateurId =
       typeof rawA.evaluateur === "number"
         ? rawA.evaluateur
-        : rawA.evaluateur?.id
-          ? Number(rawA.evaluateur.id)
-          : 0;
+        : rawA.evaluateur?.documentId ?? rawA.evaluateur?.id ?? 0;
 
     return {
-      id: Number(rawA.id),
+      id: rawA.documentId ?? rawA.id ?? 0,
       clientId,
       evaluateurId,
       dateAssignation: rawA.dateAssignation,
@@ -557,7 +572,7 @@ export async function getAssignations(tkn?: string): Promise<Assignation[]> {
           : undefined,
       evaluateur: evaluateurObj
         ? {
-            id: Number(evaluateurObj.id),
+            id: evaluateurObj.documentId ?? evaluateurObj.id ?? 0,
             username: evaluateurObj.username ?? evaluateurObj.email ?? "",
             email: evaluateurObj.email,
             role: evaluateurObj.role?.name,
@@ -568,28 +583,36 @@ export async function getAssignations(tkn?: string): Promise<Assignation[]> {
 }
 
 export async function createAssignation(
-  data: { client: number; evaluateur: number; dateAssignation?: string },
+  data: {
+    client: number | string;
+    evaluateur: number | string;
+    dateAssignation?: string;
+  },
   tkn?: string,
 ) {
   return strapiPost("/assignations", data, token(tkn));
 }
 
-export async function deleteAssignation(id: number, tkn?: string) {
+export async function deleteAssignation(id: number | string, tkn?: string) {
   return strapiDelete(`/assignations/${id}`, token(tkn));
 }
 
 interface RawUser {
   id: number | string;
+  documentId?: string;
   username?: string;
   email?: string;
   role?: { name?: string };
 }
 
-export async function getUsers(
-  tkn?: string,
-): Promise<
-  Array<{ id: number; username: string; email: string; role?: string }>
-> {
+interface NormalizedUser {
+  id: number | string;
+  username: string;
+  email: string;
+  role?: string;
+}
+
+export async function getUsers(tkn?: string): Promise<NormalizedUser[]> {
   const res = await strapiGet("/users", { populate: "role" }, token(tkn));
   const list = Array.isArray(res)
     ? res
@@ -599,8 +622,8 @@ export async function getUsers(
   return list.map((u: unknown) => {
     const rawU = u as RawUser;
     return {
-      id: Number(rawU.id),
-      username: rawU.username ?? rawU.email,
+      id: rawU.documentId ?? rawU.id,
+      username: rawU.username ?? rawU.email ?? "",
       email: rawU.email ?? "",
       role: rawU.role?.name,
     };
@@ -614,7 +637,7 @@ export async function getEvaluatorUsers(tkn?: string) {
   });
 }
 
-export async function deleteUser(id: number, tkn?: string) {
+export async function deleteUser(id: number | string, tkn?: string) {
   return strapiDelete(`/users/${id}`, token(tkn));
 }
 
@@ -664,8 +687,8 @@ export async function createEvaluatorUser(
 }
 
 export async function reorderQuestions(
-  questionnaireId: number,
-  orderedIds: number[],
+  questionnaireId: number | string,
+  orderedIds: Array<number | string>,
   tkn?: string,
 ) {
   return Promise.all(
@@ -685,7 +708,7 @@ export async function createQuestion(
     commentaireUn?: string;
     commentaireDeux?: string;
     commentaireTrois?: string;
-    questionnaire: number;
+    questionnaire: number | string;
   },
   tkn?: string,
 ) {
@@ -697,7 +720,7 @@ export async function createQuestion(
 }
 
 export async function updateQuestion(
-  id: number,
+  id: number | string,
   data: Partial<{
     texte: string;
     critere?: string;
@@ -713,17 +736,17 @@ export async function updateQuestion(
   return strapiPut(`/questions/${id}`, data, token(tkn));
 }
 
-export async function deleteQuestion(id: number, tkn?: string) {
+export async function deleteQuestion(id: number | string, tkn?: string) {
   return strapiDelete(`/questions/${id}`, token(tkn));
 }
 
 export async function createEvaluation(
   data: {
-    client: number;
-    questionnaire: number;
+    client: number | string;
+    questionnaire: number | string;
     dateEvaluation: string;
     evaluateur: string;
-    evaluateurUtilisateur?: number;
+    evaluateurUtilisateur?: number | string;
     commentaireGlobal?: string;
     commentaireConclusion?: string;
     statut: "en_cours" | "terminee";
@@ -731,8 +754,8 @@ export async function createEvaluation(
     scoreMaxReel: number;
     pourcentageScore: number;
     reponses: Array<{
-      question?: number;
-      questionCustom?: number;
+      question?: number | string;
+      questionCustom?: number | string;
       note: number;
       commentaireEvaluateur?: string;
     }>;
@@ -792,14 +815,14 @@ export async function updateEvaluation(
     scoreMaxReel: number;
     pourcentageScore: number;
     reponses?: Array<{
-      id?: number;
-      question?: number;
-      questionCustom?: number;
+      id?: number | string;
+      question?: number | string;
+      questionCustom?: number | string;
       note: number;
       commentaireEvaluateur?: string;
     }>;
     questions_custom?: Array<{
-      id?: number;
+      id?: number | string;
       critere: string;
       indicateur?: string;
       texte: string;

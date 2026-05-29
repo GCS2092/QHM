@@ -1,12 +1,12 @@
 export interface UserReference {
-  id: number;
+  id: number | string;
   username: string;
   email?: string;
   role?: string;
 }
 
 export interface Question {
-  id: number;
+  id: number | string;
   texte: string;
   critere?: string;
   indicateur?: string;
@@ -16,13 +16,13 @@ export interface Question {
   commentaireDeux?: string;
   commentaireTrois?: string;
   questionnaire?: {
-    id: number;
+    id: number | string;
     titre?: string;
   };
 }
 
 export interface QuestionCustom {
-  id: number;
+  id: number | string;
   critere: string;
   indicateur?: string;
   texte: string;
@@ -30,7 +30,7 @@ export interface QuestionCustom {
 }
 
 export interface Response {
-  id: number;
+  id: number | string;
   note: number;
   commentaireEvaluateur?: string;
   question?: Question;
@@ -38,7 +38,7 @@ export interface Response {
 }
 
 export interface Client {
-  id: number;
+  id: number | string;        // ← accepte documentId (string) ou id (number)
   nomEntreprise: string;
   nomResponsable: string;
   email?: string;
@@ -51,7 +51,7 @@ export interface Client {
 }
 
 export interface Questionnaire {
-  id: number;
+  id: number | string;
   titre: string;
   description?: string;
   actif?: boolean;
@@ -61,13 +61,13 @@ export interface Questionnaire {
 }
 
 export interface Evaluation {
-  id: number;
+  id: number | string;
   scoreFinal: number;
   scoreMaxReel: number;
   pourcentageScore: number;
   dateEvaluation: string;
   evaluateur: string;
-  evaluateurUtilisateurId?: number;
+  evaluateurUtilisateurId?: number | string;
   commentaireGlobal?: string;
   commentaireConclusion?: string;
   statut?: "en_cours" | "terminee";
@@ -90,9 +90,9 @@ export interface AnalyticsSummary {
 }
 
 export interface Assignation {
-  id: number;
-  clientId: number;
-  evaluateurId: number;
+  id: number | string;
+  clientId: number | string;
+  evaluateurId: number | string;
   dateAssignation?: string;
   client?: Client;
   evaluateur?: UserReference;
