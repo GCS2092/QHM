@@ -13,8 +13,7 @@ const EvaluationPdfExport = dynamic(() => import("./EvaluationPdfExport"), {
 });
 
 type Props = {
-  evaluationId: number;
-  /** Si l'évaluation complète est déjà chargée (évite un fetch) */
+  evaluationId: number | string;  // ← changer ici
   evaluation?: Evaluation;
   variant?: "default" | "compact";
   onClick?: (e: React.MouseEvent) => void;

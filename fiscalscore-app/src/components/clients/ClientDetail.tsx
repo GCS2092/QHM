@@ -21,18 +21,17 @@ import type { Client, Evaluation } from "@/lib/types";
 export default function ClientDetail({ clientId }: { clientId: string }) {
   const { data: session } = useSession();
   const isAdmin = isAdminRole((session?.user as { role?: string })?.role);
-  const userId = Number((session?.user as { id?: string })?.id);
+  const userId = (session?.user as { id?: string })?.id ?? "";
   const userName = session?.user?.name ?? "";
 
-  const [client, setClient] = useState<
-    (Client & { evaluations?: Evaluation[] }) | null
-  >(null);
-  const [assignationIds, setAssignationIds] = useState<Record<number, number>>(
-    {},
-  );
-  const [evaluators, setEvaluators] = useState<
-    Array<{ id: number; username: string }>
-  >([]);
+  // ✅ Correct — types séparés
+type ClientWithEvals = (Client & { evaluations?: Evaluation[] }) | null;
+type AssignationMap = Record<string, number | string>;
+type EvaluatorItem = { id: number | string; username: string };
+
+const [client, setClient] = useState<ClientWithEvals>(null);
+const [assignationIds, setAssignationIds] = useState<AssignationMap>({});
+const [evaluators, setEvaluators] = useState<EvaluatorItem[]>([]);
   const [selectedEvaluator, setSelectedEvaluator] = useState("");
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -45,7 +44,8 @@ export default function ClientDetail({ clientId }: { clientId: string }) {
   });
 
   async function reload() {
-    const c = await getClientById(clientId);
+    const tkn = (session?.user as { accessToken?: string })?.accessToken;
+    const c = await getClientById(clientId, tkn);
     setClient(c);
     if (c) {
       setEditForm({
@@ -57,12 +57,12 @@ export default function ClientDetail({ clientId }: { clientId: string }) {
       });
     }
     if (isAdmin) {
-      const assigns = await getAssignations();
-      const map: Record<number, number> = {};
+      const assigns = await getAssignations(tkn);
+      const map: Record<string, number | string> = {};
       assigns
-        .filter((a) => a.clientId === Number(clientId))
+        .filter((a) => String(a.clientId) === String(clientId))
         .forEach((a) => {
-          map[a.evaluateurId] = a.id;
+          map[String(a.evaluateurId)] = a.id;
         });
       setAssignationIds(map);
     }
@@ -72,11 +72,12 @@ export default function ClientDetail({ clientId }: { clientId: string }) {
     let cancelled = false;
 
     const load = async () => {
+      const tkn = (session?.user as { accessToken?: string })?.accessToken;
       if (!cancelled) setLoading(true);
       await Promise.all([
         reload(),
         isAdmin
-          ? getEvaluatorUsers()
+          ? getEvaluatorUsers(tkn)
               .then((data) => {
                 if (!cancelled) setEvaluators(data);
               })
@@ -97,49 +98,62 @@ export default function ClientDetail({ clientId }: { clientId: string }) {
     ? (client?.evaluations ?? [])
     : (client?.evaluations ?? []).filter(
         (e) =>
-          e.evaluateur === userName || e.evaluateurUtilisateurId === userId,
+          e.evaluateur === userName ||
+          String(e.evaluateurUtilisateurId) === String(userId),
       );
 
   async function handleAssign() {
     if (!selectedEvaluator || !client) return;
-    await createAssignation({
-      client: client.id,
-      evaluateur: Number(selectedEvaluator),
-      dateAssignation: new Date().toISOString().slice(0, 10),
-    });
+    const tkn = (session?.user as { accessToken?: string })?.accessToken;
+    await createAssignation(
+      {
+        client: client.id,
+        evaluateur: selectedEvaluator,
+        dateAssignation: new Date().toISOString().slice(0, 10),
+      },
+      tkn,
+    );
     setSelectedEvaluator("");
     await reload();
   }
 
-  async function handleUnassign(evaluatorId: number) {
+  async function handleUnassign(evaluatorId: string) {
     const assignId = assignationIds[evaluatorId];
     if (!assignId) return;
-    await deleteAssignation(assignId);
+    const tkn = (session?.user as { accessToken?: string })?.accessToken;
+    await deleteAssignation(assignId, tkn);
     await reload();
   }
 
   async function toggleArchive() {
     if (!client) return;
-    await updateClient(client.id, { archive: !client.archive });
+    const tkn = (session?.user as { accessToken?: string })?.accessToken;
+    await updateClient(client.id, { archive: !client.archive }, tkn);
     await reload();
   }
 
   async function saveEdit() {
     if (!client) return;
-    await updateClient(client.id, {
-      nomEntreprise: editForm.nomEntreprise.trim(),
-      nomResponsable: editForm.nomResponsable.trim(),
-      email: editForm.email.trim() || undefined,
-      telephone: editForm.telephone.trim() || undefined,
-      secteur: editForm.secteur.trim() || undefined,
-    });
+    const tkn = (session?.user as { accessToken?: string })?.accessToken;
+    await updateClient(
+      client.id,
+      {
+        nomEntreprise: editForm.nomEntreprise.trim(),
+        nomResponsable: editForm.nomResponsable.trim(),
+        email: editForm.email.trim() || undefined,
+        telephone: editForm.telephone.trim() || undefined,
+        secteur: editForm.secteur.trim() || undefined,
+      },
+      tkn,
+    );
     setEditing(false);
     await reload();
   }
 
   async function handleDelete() {
     if (!client || !confirm("Supprimer définitivement ce client ?")) return;
-    await deleteClient(client.id);
+    const tkn = (session?.user as { accessToken?: string })?.accessToken;
+    await deleteClient(client.id, tkn);
     window.location.href = "/dashboard/clients";
   }
 
@@ -290,7 +304,7 @@ export default function ClientDetail({ clientId }: { clientId: string }) {
           </h2>
           <div className="flex flex-wrap gap-2 mb-4">
             {Object.keys(assignationIds).map((eid) => {
-              const ev = evaluators.find((e) => e.id === Number(eid));
+              const ev = evaluators.find((e) => String(e.id) === eid);
               return (
                 <span
                   key={eid}
@@ -299,7 +313,7 @@ export default function ClientDetail({ clientId }: { clientId: string }) {
                   {ev?.username ?? `Utilisateur #${eid}`}
                   <button
                     type="button"
-                    onClick={() => handleUnassign(Number(eid))}
+                    onClick={() => handleUnassign(eid)}
                     className="text-blue-600 hover:text-red-600"
                   >
                     ×
@@ -321,7 +335,7 @@ export default function ClientDetail({ clientId }: { clientId: string }) {
             >
               <option value="">Choisir un évaluateur</option>
               {evaluators
-                .filter((e) => !assignationIds[e.id])
+                .filter((e) => !assignationIds[String(e.id)])
                 .map((e) => (
                   <option key={e.id} value={e.id}>
                     {e.username}
