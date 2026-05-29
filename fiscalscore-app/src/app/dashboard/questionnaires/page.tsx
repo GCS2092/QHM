@@ -9,7 +9,7 @@ export default function QuestionnairesPage() {
   const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | string | null>(null);
 
   useEffect(() => {
     getQuestionnaires()
@@ -22,7 +22,7 @@ export default function QuestionnairesPage() {
 
   const availableCount = useMemo(() => questionnaires.length, [questionnaires]);
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: number | string) => {
     if (!window.confirm("Voulez-vous vraiment supprimer ce questionnaire ?")) {
       return;
     }
@@ -31,7 +31,7 @@ export default function QuestionnairesPage() {
     try {
       await deleteQuestionnaire(id);
       setQuestionnaires((prev) =>
-        prev.filter((questionnaire) => questionnaire.id !== id),
+        prev.filter((questionnaire) => String(questionnaire.id) !== String(id)),
       );
     } catch (err: unknown) {
       setError(
@@ -103,7 +103,7 @@ export default function QuestionnairesPage() {
                   colSpan={5}
                   className="px-6 py-10 text-center text-gray-400"
                 >
-                  Aucun questionnaire trouve
+                  Aucun questionnaire trouvé
                 </td>
               </tr>
             ) : (
@@ -149,7 +149,7 @@ export default function QuestionnairesPage() {
                       <button
                         type="button"
                         onClick={() => handleDelete(q.id)}
-                        disabled={deletingId === q.id}
+                        disabled={String(deletingId) === String(q.id)}
                         className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <Trash2 className="w-4 h-4" />
