@@ -272,12 +272,7 @@ export async function getClientById(
 ): Promise<(Client & { evaluations?: Evaluation[] }) | null> {
   const res = await strapiGet(
     `/clients/${id}`,
-    {
-      // Strapi v5 : syntaxe nommée, pas d'indices numériques
-      "populate[assignations][populate][evaluateur]": "*",
-      "populate[evaluations][populate][questionnaire]": "*",
-      "populate[evaluations][populate][evaluateurUtilisateur]": "*",
-    },
+    { populate: "*" },
     token(tkn),
   );
   if (!res?.data) return null;
@@ -373,7 +368,6 @@ export async function getEvaluationById(
     {
       "populate[client]": "*",
       "populate[questionnaire]": "*",
-      // Strapi v5 : syntaxe nommée obligatoire pour les populate imbriqués
       "populate[reponses][populate][question]": "*",
       "populate[reponses][populate][questionCustom]": "*",
       "populate[questions_custom]": "*",
