@@ -11,15 +11,20 @@ import {
 import { isAdminRole } from "@/lib/scoring";
 import { Trash2 } from "lucide-react";
 
+interface NormalizedUser {
+  id: number | string;
+  username: string;
+  email: string;
+  role?: string;
+}
+
 export default function SettingsPage() {
   const { data: session } = useSession();
   const isAdmin = isAdminRole((session?.user as { role?: string })?.role);
-  const [users, setUsers] = useState<
-    Array<{ id: number; username: string; email: string; role?: string }>
-  >([]);
+  const [users, setUsers] = useState<NormalizedUser[]>([]);
   const [assignations, setAssignations] = useState<
     Array<{
-      id: number;
+      id: number | string;
       client?: { nomEntreprise?: string };
       evaluateur?: { username?: string };
     }>
@@ -29,7 +34,7 @@ export default function SettingsPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | string | null>(null);
 
   async function loadData() {
     const [u, a] = await Promise.all([getUsers(), getAssignations()]);
@@ -82,7 +87,7 @@ export default function SettingsPage() {
     }
   }
 
-  async function handleDeleteEvaluator(id: number, name: string) {
+  async function handleDeleteEvaluator(id: number | string, name: string) {
     if (!confirm(`Supprimer définitivement le compte « ${name} » ?`)) return;
     setDeletingId(id);
     setFeedback(null);
@@ -189,7 +194,7 @@ export default function SettingsPage() {
           <ul className="divide-y">
             {evaluators.map((u) => (
               <li
-                key={u.id}
+                key={String(u.id)}
                 className="py-3 flex items-center justify-between gap-4 text-sm"
               >
                 <div>
@@ -225,7 +230,7 @@ export default function SettingsPage() {
         ) : (
           <ul className="divide-y text-sm">
             {assignations.map((a) => (
-              <li key={a.id} className="py-2 flex justify-between">
+              <li key={String(a.id)} className="py-2 flex justify-between">
                 <span>{a.client?.nomEntreprise ?? "Client"}</span>
                 <span className="text-gray-500">
                   → {a.evaluateur?.username ?? "Évaluateur"}
