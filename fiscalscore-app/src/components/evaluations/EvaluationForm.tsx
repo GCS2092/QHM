@@ -21,7 +21,7 @@ import { computeScoreFromNotes, getSeuil, isAdminRole } from "@/lib/scoring";
 import { commentaireAutoForNote } from "@/lib/commentaires-auto";
 
 type LocalResponse = {
-  questionId?: number;
+  questionId?: number | string;
   note: number | null;
   commentaireEvaluateur?: string;
 };
@@ -57,7 +57,7 @@ export default function EvaluationForm({
     new Date().toISOString().slice(0, 10),
   );
   const [saving, setSaving] = useState(false);
-  const [serverEvalId, setServerEvalId] = useState<number | null>(null);
+  const [serverEvalId, setServerEvalId] = useState<number | string | null>(null);
 
   const selectedQ = questionnaires.find(
     (q) => String(q.id) === selectedQuestionnaire,
@@ -260,7 +260,7 @@ export default function EvaluationForm({
       if (!serverEvalId) {
         const res = await createEvaluation(payload);
         const createdId = res?.data?.id ?? res?.id ?? null;
-        if (createdId) setServerEvalId(Number(createdId));
+        if (createdId) setServerEvalId(createdId);
         if (!draft && createdId) {
           router.push(`/dashboard/evaluations/${createdId}`);
           return;
@@ -355,7 +355,7 @@ export default function EvaluationForm({
               disabled={Boolean(initialClientId) || isEditMode}
             >
               {clients.map((c) => (
-                <option key={c.id} value={c.id}>
+                <option key={String(c.id)} value={c.id}>
                   {c.nomEntreprise} — {c.nomResponsable}
                 </option>
               ))}
@@ -372,7 +372,7 @@ export default function EvaluationForm({
               disabled={isEditMode}
             >
               {questionnaires.map((q) => (
-                <option key={q.id} value={q.id}>
+                <option key={String(q.id)} value={q.id}>
                   {q.titre} (
                   {q.type === "mission" ? "Mission" : "Planification"})
                 </option>
