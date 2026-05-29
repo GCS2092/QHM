@@ -10,8 +10,8 @@ type Row = {
   key: string;
   label: string;
   critere: string;
-  questionId?: number;
-  questionCustomId?: number;
+  questionId?: number | string;
+  questionCustomId?: number | string;
   note: number;
   commentaireEvaluateur?: string;
   autoComment?: string;
