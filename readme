@@ -82,3 +82,4 @@ DATABASE_PASSWORD=qhm
 ## API sécurisée
 
 Les routes Strapi exigent un JWT (plus de `auth: false`). Les contrôleurs filtrent clients et évaluations par assignation et par évaluateur.
+ 
