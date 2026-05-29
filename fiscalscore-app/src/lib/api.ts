@@ -253,6 +253,7 @@ function normalizeEvaluation(item: unknown): Evaluation {
       : [],
   };
 }
+
 export async function getClients(tkn?: string): Promise<Client[]> {
   const res = await strapiGet(
     "/clients",
@@ -272,9 +273,10 @@ export async function getClientById(
   const res = await strapiGet(
     `/clients/${id}`,
     {
-      "populate[assignations][populate][0]": "evaluateur",
-      "populate[evaluations][populate][0]": "questionnaire",
-      "populate[evaluations][populate][1]": "evaluateurUtilisateur",
+      // Strapi v5 : syntaxe nommée, pas d'indices numériques
+      "populate[assignations][populate][evaluateur]": "*",
+      "populate[evaluations][populate][questionnaire]": "*",
+      "populate[evaluations][populate][evaluateurUtilisateur]": "*",
     },
     token(tkn),
   );
@@ -371,8 +373,9 @@ export async function getEvaluationById(
     {
       "populate[client]": "*",
       "populate[questionnaire]": "*",
-      "populate[reponses][populate][0]": "question",
-      "populate[reponses][populate][1]": "questionCustom",
+      // Strapi v5 : syntaxe nommée obligatoire pour les populate imbriqués
+      "populate[reponses][populate][question]": "*",
+      "populate[reponses][populate][questionCustom]": "*",
       "populate[questions_custom]": "*",
       "populate[evaluateurUtilisateur]": "*",
     },
@@ -390,8 +393,8 @@ export async function getAnalyticsSummary(
     strapiGet(
       "/evaluations",
       {
-        "populate[0]": "client",
-        "populate[1]": "questionnaire",
+        "populate[client]": "*",
+        "populate[questionnaire]": "*",
         sort: "dateEvaluation:desc",
       },
       token(tkn),
@@ -435,19 +438,19 @@ export async function getAnalyticsSummary(
   }).length;
 
   interface RiskEntry {
-  nom: string;
-  pourcentage: number;
-  alerte: string;
-}
+    nom: string;
+    pourcentage: number;
+    alerte: string;
+  }
 
-interface MonthlyEntry {
-  label: string;
-  total: number;
-  count: number;
-}
+  interface MonthlyEntry {
+    label: string;
+    total: number;
+    count: number;
+  }
 
-const riskMap: Map<string, RiskEntry> = new Map();
-const monthlyStats: Map<string, MonthlyEntry> = new Map();
+  const riskMap: Map<string, RiskEntry> = new Map();
+  const monthlyStats: Map<string, MonthlyEntry> = new Map();
   const formatter = new Intl.DateTimeFormat("fr-FR", { month: "short" });
 
   evaluations.forEach((item: unknown) => {
