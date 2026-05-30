@@ -76,7 +76,7 @@ export function formatEvaluationPdfName(nomEntreprise: string, type: Questionnai
 export function isAdminRole(role?: string | null): boolean {
   if (!role) return false;
   const r = role.toLowerCase();
-  return r === 'administrator' || r === 'admin';
+  return r === 'administrator' || r === 'admin' || r === 'administrateur';
 }
 
 export function isEvaluatorRole(role?: string | null): boolean {
