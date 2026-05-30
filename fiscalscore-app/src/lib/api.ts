@@ -414,9 +414,6 @@ export async function getEvaluationById(
       "populate[reponses][populate][question]": "*",
       "populate[reponses][populate][questionCustom]": "*",
       "populate[questions_custom]": "*",
-      "populate[evaluateurUtilisateur][fields][0]": "id",
-      "populate[evaluateurUtilisateur][fields][1]": "username",
-      "populate[evaluateurUtilisateur][fields][2]": "email",
     },
     token(tkn),
   );

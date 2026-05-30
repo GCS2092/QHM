@@ -14,8 +14,6 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.identifier || !credentials.password) {
           return null;
         }
-
-        // ── Tentative 1 : Users & Permissions (/api/auth/local) ──────────
         const response = await fetch(`${STRAPI_URL}/api/auth/local`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -24,78 +22,46 @@ export const authOptions: NextAuthOptions = {
             password: credentials.password,
           }),
         });
+        if (!response.ok) return null;
+        const data = await response.json();
+        if (!data?.jwt || !data.user) return null;
 
-        if (response.ok) {
-          const data = await response.json();
-          if (data?.jwt && data.user) {
-            // Récupérer le rôle via /api/users/me?populate=role
-            let roleName: string | null = data.user.role?.name ?? null;
-            if (!roleName) {
-              try {
-                const meRes = await fetch(
-                  `${STRAPI_URL}/api/users/me?populate=role`,
-                  { headers: { Authorization: `Bearer ${data.jwt}` } },
-                );
-                if (meRes.ok) {
-                  const meData = await meRes.json();
-                  roleName = meData.role?.name ?? null;
-                }
-              } catch {
-                // ignore
-              }
+        // Récupérer le rôle via /api/users/me?populate=role
+        let roleName: string | null = data.user.role?.name ?? null;
+        if (!roleName) {
+          try {
+            const meRes = await fetch(
+              `${STRAPI_URL}/api/users/me?populate=role`,
+              { headers: { Authorization: `Bearer ${data.jwt}` } },
+            );
+            if (meRes.ok) {
+              const meData = await meRes.json();
+              roleName = meData.role?.name ?? null;
             }
-
-            return {
-              id: String(data.user.id),
-              name:
-                data.user.username ||
-                data.user.email ||
-                `${data.user.firstname ?? ""} ${data.user.lastname ?? ""}`.trim(),
-              email: data.user.email,
-              accessToken: data.jwt,
-              role: roleName ?? "authenticated",
-              strapiUserId: data.user.id,
-            } as unknown as Parameters<typeof CredentialsProvider>[0] extends { authorize: (...args: unknown[]) => Promise<infer T> } ? NonNullable<T> : never;
+          } catch {
+            // ignore
           }
         }
 
-        // ── Tentative 2 : Admin Strapi (/admin/login) ────────────────────
-        // Les comptes créés dans le panel Strapi (/admin) ne passent pas
-        // par /api/auth/local. On tente /admin/login pour les détecter.
-        try {
-          const adminRes = await fetch(`${STRAPI_URL}/admin/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: credentials.identifier,
-              password: credentials.password,
-            }),
-          });
-
-          if (adminRes.ok) {
-            const adminData = await adminRes.json();
-            const adminUser = adminData?.data?.user;
-            const adminToken = adminData?.data?.token;
-
-            if (adminUser && adminToken) {
-              return {
-                id: String(adminUser.id),
-                name:
-                  adminUser.username ||
-                  `${adminUser.firstname ?? ""} ${adminUser.lastname ?? ""}`.trim() ||
-                  adminUser.email,
-                email: adminUser.email,
-                accessToken: adminToken,
-                role: "administrator",
-                strapiUserId: adminUser.id,
-              } as unknown as Parameters<typeof CredentialsProvider>[0] extends { authorize: (...args: unknown[]) => Promise<infer T> } ? NonNullable<T> : never;
-            }
-          }
-        } catch {
-          // ignore
+        interface StrapiUser {
+          id: string;
+          name: string;
+          email: string;
+          accessToken: string;
+          role: string | null;
+          strapiUserId: number;
         }
-
-        return null;
+        return {
+          id: String(data.user.id),
+          name:
+            data.user.username ||
+            data.user.email ||
+            `${data.user.firstname ?? ""} ${data.user.lastname ?? ""}`.trim(),
+          email: data.user.email,
+          accessToken: data.jwt,
+          role: roleName,
+          strapiUserId: data.user.id,
+        } as StrapiUser;
       },
     }),
   ],
