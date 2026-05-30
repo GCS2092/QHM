@@ -387,7 +387,6 @@ export async function getEvaluations(tkn?: string): Promise<Evaluation[]> {
       "populate[questionnaire][fields][0]": "id",
       "populate[questionnaire][fields][1]": "titre",
       "populate[questionnaire][fields][2]": "type",
-      "populate[evaluateurUtilisateur]": "*",
       sort: "dateEvaluation:desc",
     },
     token(tkn),
@@ -415,7 +414,9 @@ export async function getEvaluationById(
       "populate[reponses][populate][question]": "*",
       "populate[reponses][populate][questionCustom]": "*",
       "populate[questions_custom]": "*",
-      "populate[evaluateurUtilisateur]": "*",
+      "populate[evaluateurUtilisateur][fields][0]": "id",
+      "populate[evaluateurUtilisateur][fields][1]": "username",
+      "populate[evaluateurUtilisateur][fields][2]": "email",
     },
     token(tkn),
   );
