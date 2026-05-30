@@ -254,10 +254,21 @@ function normalizeEvaluation(item: unknown): Evaluation {
   };
 }
 
+// ─── CLIENTS ────────────────────────────────────────────────────────────────
+
 export async function getClients(tkn?: string): Promise<Client[]> {
   const res = await strapiGet(
     "/clients",
-    { populate: "*", sort: "nomEntreprise:asc" },
+    {
+      "populate[assignations][populate][evaluateur][fields][0]": "id",
+      "populate[assignations][populate][evaluateur][fields][1]": "username",
+      "populate[assignations][populate][evaluateur][fields][2]": "email",
+      "populate[evaluations][fields][0]": "id",
+      "populate[evaluations][fields][1]": "pourcentageScore",
+      "populate[evaluations][fields][2]": "dateEvaluation",
+      "populate[evaluations][fields][3]": "statut",
+      sort: "nomEntreprise:asc",
+    },
     token(tkn),
   );
   const rawData: unknown[] = Array.isArray(res.data)
@@ -272,7 +283,22 @@ export async function getClientById(
 ): Promise<(Client & { evaluations?: Evaluation[] }) | null> {
   const res = await strapiGet(
     `/clients/${id}`,
-    { populate: "*" },
+    {
+      "populate[assignations][populate][evaluateur][fields][0]": "id",
+      "populate[assignations][populate][evaluateur][fields][1]": "username",
+      "populate[assignations][populate][evaluateur][fields][2]": "email",
+      "populate[evaluations][populate][questionnaire][fields][0]": "id",
+      "populate[evaluations][populate][questionnaire][fields][1]": "titre",
+      "populate[evaluations][populate][questionnaire][fields][2]": "type",
+      "populate[evaluations][fields][0]": "id",
+      "populate[evaluations][fields][1]": "pourcentageScore",
+      "populate[evaluations][fields][2]": "dateEvaluation",
+      "populate[evaluations][fields][3]": "statut",
+      "populate[evaluations][fields][4]": "scoreFinal",
+      "populate[evaluations][fields][5]": "scoreMaxReel",
+      "populate[evaluations][fields][6]": "evaluateur",
+      "populate[evaluations][fields][7]": "commentaireGlobal",
+    },
     token(tkn),
   );
   if (!res?.data) return null;
@@ -303,6 +329,8 @@ export async function updateClient(
 export async function deleteClient(id: number | string, tkn?: string) {
   return strapiDelete(`/clients/${id}`, token(tkn));
 }
+
+// ─── QUESTIONNAIRES ──────────────────────────────────────────────────────────
 
 export async function getQuestionnaires(
   tkn?: string,
@@ -347,10 +375,23 @@ export async function deleteQuestionnaire(id: number | string, tkn?: string) {
   return strapiDelete(`/questionnaires/${id}`, token(tkn));
 }
 
+// ─── EVALUATIONS ─────────────────────────────────────────────────────────────
+
 export async function getEvaluations(tkn?: string): Promise<Evaluation[]> {
   const res = await strapiGet(
     "/evaluations",
-    { populate: "*", sort: "dateEvaluation:desc" },
+    {
+      "populate[client][fields][0]": "id",
+      "populate[client][fields][1]": "nomEntreprise",
+      "populate[client][fields][2]": "nomResponsable",
+      "populate[questionnaire][fields][0]": "id",
+      "populate[questionnaire][fields][1]": "titre",
+      "populate[questionnaire][fields][2]": "type",
+      "populate[evaluateurUtilisateur][fields][0]": "id",
+      "populate[evaluateurUtilisateur][fields][1]": "username",
+      "populate[evaluateurUtilisateur][fields][2]": "email",
+      sort: "dateEvaluation:desc",
+    },
     token(tkn),
   );
   const rawData: unknown[] = Array.isArray(res.data)
@@ -366,12 +407,19 @@ export async function getEvaluationById(
   const res = await strapiGet(
     `/evaluations/${id}`,
     {
-      "populate[client]": "*",
+      "populate[client][fields][0]": "id",
+      "populate[client][fields][1]": "nomEntreprise",
+      "populate[client][fields][2]": "nomResponsable",
+      "populate[client][fields][3]": "email",
+      "populate[client][fields][4]": "telephone",
+      "populate[client][fields][5]": "secteur",
       "populate[questionnaire]": "*",
       "populate[reponses][populate][question]": "*",
       "populate[reponses][populate][questionCustom]": "*",
       "populate[questions_custom]": "*",
-      "populate[evaluateurUtilisateur]": "*",
+      "populate[evaluateurUtilisateur][fields][0]": "id",
+      "populate[evaluateurUtilisateur][fields][1]": "username",
+      "populate[evaluateurUtilisateur][fields][2]": "email",
     },
     token(tkn),
   );
@@ -379,16 +427,24 @@ export async function getEvaluationById(
   return normalizeEvaluation(res.data);
 }
 
+// ─── ANALYTICS ───────────────────────────────────────────────────────────────
+
 export async function getAnalyticsSummary(
   tkn?: string,
 ): Promise<AnalyticsSummary> {
   const [clientsRes, evaluationsRes, questionnairesRes] = await Promise.all([
-    strapiGet("/clients", { fields: "id" }, token(tkn)),
+    strapiGet("/clients", { "fields[0]": "id" }, token(tkn)),
     strapiGet(
       "/evaluations",
       {
-        "populate[client]": "*",
-        "populate[questionnaire]": "*",
+        "populate[client][fields][0]": "id",
+        "populate[client][fields][1]": "nomEntreprise",
+        "populate[client][fields][2]": "nom",
+        "populate[questionnaire][fields][0]": "id",
+        "populate[questionnaire][fields][1]": "type",
+        "fields[0]": "pourcentageScore",
+        "fields[1]": "dateEvaluation",
+        "fields[2]": "statut",
         sort: "dateEvaluation:desc",
       },
       token(tkn),
@@ -498,6 +554,8 @@ export async function getAnalyticsSummary(
   };
 }
 
+// ─── CREATE CLIENT / QUESTIONNAIRE ───────────────────────────────────────────
+
 export async function createClient(
   data: {
     nomEntreprise: string;
@@ -524,6 +582,8 @@ export async function createQuestionnaire(
   return strapiPost("/questionnaires", data, token(tkn));
 }
 
+// ─── ASSIGNATIONS ────────────────────────────────────────────────────────────
+
 interface RawAssignationData {
   id?: number | string;
   documentId?: string;
@@ -541,7 +601,18 @@ interface RawAssignationData {
 }
 
 export async function getAssignations(tkn?: string): Promise<Assignation[]> {
-  const res = await strapiGet("/assignations", { populate: "*" }, token(tkn));
+  const res = await strapiGet(
+    "/assignations",
+    {
+      "populate[client][fields][0]": "id",
+      "populate[client][fields][1]": "nomEntreprise",
+      "populate[client][fields][2]": "nomResponsable",
+      "populate[evaluateur][fields][0]": "id",
+      "populate[evaluateur][fields][1]": "username",
+      "populate[evaluateur][fields][2]": "email",
+    },
+    token(tkn),
+  );
   const rawData: unknown[] = Array.isArray(res.data)
     ? res.data.filter(Boolean)
     : [];
@@ -593,6 +664,8 @@ export async function createAssignation(
 export async function deleteAssignation(id: number | string, tkn?: string) {
   return strapiDelete(`/assignations/${id}`, token(tkn));
 }
+
+// ─── USERS ───────────────────────────────────────────────────────────────────
 
 interface RawUser {
   id: number | string;
@@ -683,6 +756,8 @@ export async function createEvaluatorUser(
   );
 }
 
+// ─── QUESTIONS ───────────────────────────────────────────────────────────────
+
 export async function reorderQuestions(
   questionnaireId: number | string,
   orderedIds: Array<number | string>,
@@ -736,6 +811,8 @@ export async function updateQuestion(
 export async function deleteQuestion(id: number | string, tkn?: string) {
   return strapiDelete(`/questions/${id}`, token(tkn));
 }
+
+// ─── EVALUATIONS CRUD ────────────────────────────────────────────────────────
 
 export async function createEvaluation(
   data: {
