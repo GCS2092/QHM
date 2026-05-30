@@ -439,7 +439,6 @@ export async function getAnalyticsSummary(
       {
         "populate[client][fields][0]": "id",
         "populate[client][fields][1]": "nomEntreprise",
-        "populate[client][fields][2]": "nom",
         "populate[questionnaire][fields][0]": "id",
         "populate[questionnaire][fields][1]": "type",
         "fields[0]": "pourcentageScore",
