@@ -33,6 +33,25 @@ export default function EvaluationPdfButton({
 
   useEffect(() => {
     if (initial) {
+      // Si on a déjà les données, vérifie quand même qu'il y a un client
+      if (!initial.client) {
+        console.warn("Données client manquantes dans l'initial");
+        // Recharge pour avoir les données fraîches
+        setLoading(true);
+        (async () => {
+          try {
+            const data = await getEvaluationById(String(evaluationId));
+            setEvaluation(data);
+          } catch (err) {
+            console.error("Erreur chargement PDF:", err);
+            setEvaluation(initial); // Garde les données initiales en fallback
+          } finally {
+            setLoading(false);
+          }
+        })();
+      } else {
+        setEvaluation(initial);
+      }
       return;
     }
     void (async () => {
@@ -40,7 +59,8 @@ export default function EvaluationPdfButton({
       try {
         const data = await getEvaluationById(String(evaluationId));
         setEvaluation(data);
-      } catch {
+      } catch (err) {
+        console.error("Erreur chargement PDF:", err);
         setEvaluation(null);
       } finally {
         setLoading(false);

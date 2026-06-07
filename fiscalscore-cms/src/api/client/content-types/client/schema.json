@@ -37,13 +37,21 @@
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::assignation.assignation",
-      "mappedBy": "client"
+      "mappedBy": "client",
+      "options": {
+        "deferredBy": "client",
+        "cascadeDelete": true
+      }
     },
     "evaluations": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::evaluation.evaluation",
-      "mappedBy": "client"
+      "mappedBy": "client",
+      "options": {
+        "deferredBy": "client",
+        "cascadeDelete": true
+      }
     }
   }
 }

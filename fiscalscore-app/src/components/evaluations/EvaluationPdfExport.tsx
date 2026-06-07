@@ -508,12 +508,26 @@ export default function EvaluationPdfExport({
   label?: string;
 }) {
   if (evaluation.statut !== "terminee") return null;
+
+  // Vérifier que les données critiques sont présentes
+  if (!evaluation.client || !evaluation.questionnaire) {
+    return (
+      <button
+        disabled
+        className="inline-flex items-center justify-center gap-2 rounded-lg bg-gray-300 px-4 py-2 text-sm font-medium text-gray-500 cursor-not-allowed"
+      >
+        Données manquantes
+      </button>
+    );
+  }
+
   const type = evaluation.questionnaire?.type ?? "planification";
   const fileName = formatEvaluationPdfName(
     evaluation.client?.nomEntreprise ?? "Client",
     type,
     evaluation.dateEvaluation,
   );
+
   return (
     <PDFDownloadLink
       document={<EvaluationPdfDocument evaluation={evaluation} />}
