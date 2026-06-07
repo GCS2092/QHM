@@ -144,7 +144,11 @@ interface RawEvaluation {
   dateEvaluation?: string;
   date?: string;
   evaluateur?: string;
-  evaluateurUtilisateur?: { id?: number | string; documentId?: string } | number | string | null;
+  evaluateurUtilisateur?:
+    | { id?: number | string; documentId?: string }
+    | number
+    | string
+    | null;
   commentaireGlobal?: string;
   commentaire?: string;
   commentaireConclusion?: string;
@@ -420,10 +424,14 @@ export async function getEvaluationById(
       "populate[questionnaire][populate][questions][fields][2]": "critere",
       "populate[questionnaire][populate][questions][fields][3]": "indicateur",
       "populate[questionnaire][populate][questions][fields][4]": "ordre",
-      "populate[questionnaire][populate][questions][fields][5]": "commentaireZero",
-      "populate[questionnaire][populate][questions][fields][6]": "commentaireUn",
-      "populate[questionnaire][populate][questions][fields][7]": "commentaireDeux",
-      "populate[questionnaire][populate][questions][fields][8]": "commentaireTrois",
+      "populate[questionnaire][populate][questions][fields][5]":
+        "commentaireZero",
+      "populate[questionnaire][populate][questions][fields][6]":
+        "commentaireUn",
+      "populate[questionnaire][populate][questions][fields][7]":
+        "commentaireDeux",
+      "populate[questionnaire][populate][questions][fields][8]":
+        "commentaireTrois",
       "populate[reponses][populate][question][fields][0]": "id",
       "populate[reponses][populate][question][fields][1]": "texte",
       "populate[reponses][populate][question][fields][2]": "critere",
@@ -639,13 +647,13 @@ export async function getAssignations(tkn?: string): Promise<Assignation[]> {
     const clientId =
       typeof rawA.client === "number"
         ? rawA.client
-        : rawA.client?.documentId ?? rawA.client?.id ?? 0;
+        : (rawA.client?.documentId ?? rawA.client?.id ?? 0);
     const evaluateurObj =
       typeof rawA.evaluateur === "number" ? undefined : rawA.evaluateur;
     const evaluateurId =
       typeof rawA.evaluateur === "number"
         ? rawA.evaluateur
-        : rawA.evaluateur?.documentId ?? rawA.evaluateur?.id ?? 0;
+        : (rawA.evaluateur?.documentId ?? rawA.evaluateur?.id ?? 0);
 
     return {
       id: rawA.documentId ?? rawA.id ?? 0,
@@ -727,6 +735,22 @@ export async function getEvaluatorUsers(tkn?: string) {
 
 export async function deleteUser(id: number | string, tkn?: string) {
   return strapiDelete(`/users/${id}`, token(tkn));
+}
+
+export async function updateUser(
+  id: number | string,
+  data: {
+    email?: string;
+    password?: string;
+  },
+  tkn?: string,
+) {
+  // Ne pas inclure les champs vides
+  const payload: Record<string, string> = {};
+  if (data.email) payload.email = data.email;
+  if (data.password) payload.password = data.password;
+
+  return strapiPut(`/users/${id}`, payload, token(tkn));
 }
 
 export async function createEvaluatorUser(

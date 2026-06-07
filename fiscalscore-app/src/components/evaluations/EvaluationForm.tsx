@@ -290,6 +290,7 @@ export default function EvaluationForm({
     }
   }
 
+  // Autosave sur changements
   useEffect(() => {
     if (answeredCount === 0 && !serverEvalId) return;
     const timer = setTimeout(() => {
@@ -305,6 +306,69 @@ export default function EvaluationForm({
     selectedClient,
     selectedQuestionnaire,
   ]);
+
+  // Prévention de navigation avec données non sauvegardées
+  const isUnsaved = answeredCount > 0 && serverEvalId === null;
+
+  const confirmMessage =
+    "Vous avez des modifications non sauvegardées. Êtes-vous sûr de vouloir quitter sans sauvegarder ?";
+
+  // Hook beforeunload pour rechargement/fermeture de page/onglet
+  useEffect(() => {
+    if (!isUnsaved) return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+      return "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isUnsaved]);
+
+  // Hook pour prévention de navigation sur clics de liens
+  useEffect(() => {
+    if (!isUnsaved) return;
+
+    const handleLinkClick = (e: MouseEvent) => {
+      const target = (e.target as HTMLElement).closest("a[href]");
+      if (!target) return;
+      const href = target.getAttribute("href");
+      if (!href || href.startsWith("#")) return;
+
+      e.preventDefault();
+      if (window.confirm(confirmMessage)) {
+        window.location.href = href;
+      }
+    };
+
+    document.addEventListener("click", handleLinkClick);
+    return () => document.removeEventListener("click", handleLinkClick);
+  }, [isUnsaved, confirmMessage]);
+
+  // Fonction de navigation sécurisée pour router.push (utility function)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const safeNavigate = useCallback(
+    (path: string) => {
+      if (isUnsaved && !window.confirm(confirmMessage)) {
+        return;
+      }
+      router.push(path);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isUnsaved],
+  );
+
+  // Fonction pour revenir en arrière avec confirmation (utility function)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const safeBack = useCallback(() => {
+    if (isUnsaved && !window.confirm(confirmMessage)) {
+      return;
+    }
+    router.back();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isUnsaved]);
 
   if (loadingEdit) {
     return (

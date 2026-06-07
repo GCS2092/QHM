@@ -7,10 +7,12 @@ import type { Questionnaire } from "@/lib/types";
 
 interface QuestionnaireEditFormProps {
   questionnaire: Questionnaire;
+  hasActiveEvaluations?: boolean;
 }
 
 export default function QuestionnaireEditForm({
   questionnaire,
+  hasActiveEvaluations = false,
 }: QuestionnaireEditFormProps) {
   const router = useRouter();
   const [titre, setTitre] = useState(questionnaire.titre ?? "");
@@ -55,76 +57,98 @@ export default function QuestionnaireEditForm({
   };
 
   return (
-    <div className="rounded-3xl border border-gray-100 bg-white p-8 shadow-sm">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Titre
-          </label>
-          <input
-            type="text"
-            value={titre}
-            onChange={(event) => setTitre(event.target.value)}
-            className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
-            placeholder="Nom du questionnaire"
-          />
+    <div className="space-y-6">
+      {/* Banneau d'alerte si évaluations en cours */}
+      {hasActiveEvaluations && (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-800">
+          <div className="flex gap-3">
+            <div className="text-lg leading-none pt-0.5">⚠️</div>
+            <div>
+              <p className="font-medium">Attention</p>
+              <p className="text-sm mt-1">
+                Des évaluations sont en cours. Les questions ne peuvent pas être
+                modifiées tant que vous les terminez.
+              </p>
+            </div>
+          </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Description
-          </label>
-          <textarea
-            value={description}
-            onChange={(event) => setDescription(event.target.value)}
-            className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
-            rows={4}
-            placeholder="Brève description du questionnaire"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Type de questionnaire
-          </label>
-          <select
-            value={type}
-            onChange={(e) =>
-              setType(e.target.value as "planification" | "mission")
-            }
-            className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
-          >
-            <option value="planification">
-              Phase de planification (radar, seuils 86/57%)
-            </option>
-            <option value="mission">
-              Pendant la mission (barres, seuils 80/60%)
-            </option>
-          </select>
-        </div>
-        <div className="flex items-center gap-3">
-          <input
-            id="actif"
-            type="checkbox"
-            checked={actif}
-            onChange={(event) => setActif(event.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-          />
-          <label htmlFor="actif" className="text-sm text-gray-700">
-            Actif
-          </label>
-        </div>
-        {feedback ? (
-          <div className="text-sm text-red-600">{feedback}</div>
-        ) : null}
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={saving}
-            className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {saving ? "Mise à jour en cours..." : "Enregistrer"}
-          </button>
-        </div>
-      </form>
+      )}
+
+      <div className="rounded-3xl border border-gray-100 bg-white p-8 shadow-sm">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Titre
+            </label>
+            <input
+              type="text"
+              value={titre}
+              onChange={(event) => setTitre(event.target.value)}
+              disabled={hasActiveEvaluations}
+              className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              placeholder="Nom du questionnaire"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Description
+            </label>
+            <textarea
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              disabled={hasActiveEvaluations}
+              className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              rows={4}
+              placeholder="Brève description du questionnaire"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Type de questionnaire
+            </label>
+            <select
+              value={type}
+              onChange={(e) =>
+                setType(e.target.value as "planification" | "mission")
+              }
+              disabled={hasActiveEvaluations}
+              className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <option value="planification">
+                Phase de planification (radar, seuils 86/57%)
+              </option>
+              <option value="mission">
+                Pendant la mission (barres, seuils 80/60%)
+              </option>
+            </select>
+          </div>
+          <div className="flex items-center gap-3">
+            <input
+              id="actif"
+              type="checkbox"
+              checked={actif}
+              onChange={(event) => setActif(event.target.checked)}
+              disabled={hasActiveEvaluations}
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            />
+            <label htmlFor="actif" className="text-sm text-gray-700">
+              Actif
+            </label>
+          </div>
+          {feedback ? (
+            <div className="text-sm text-red-600">{feedback}</div>
+          ) : null}
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              disabled={saving || hasActiveEvaluations}
+              className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {saving ? "Mise à jour en cours..." : "Enregistrer"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

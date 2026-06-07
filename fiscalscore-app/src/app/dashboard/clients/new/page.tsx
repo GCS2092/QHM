@@ -5,6 +5,16 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { createClient } from "@/lib/api";
 
+function validateEmail(email: string): boolean {
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(email);
+}
+
+function validatePhone(phone: string): boolean {
+  const regex = /^[\d\s\-+()]+$/;
+  return regex.test(phone) && phone.trim().length >= 7;
+}
+
 export default function NewClientPage() {
   const router = useRouter();
   const { data: session } = useSession();
@@ -15,9 +25,12 @@ export default function NewClientPage() {
   const [secteur, setSecteur] = useState("");
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const newErrors: Record<string, string> = {};
+
     if (!nomEntreprise.trim() || !nomResponsable.trim()) {
       setFeedback(
         "Le nom de l'entreprise et le nom du responsable sont obligatoires.",
@@ -25,12 +38,27 @@ export default function NewClientPage() {
       return;
     }
 
+    if (email && !validateEmail(email)) {
+      newErrors.email = "Email invalide";
+    }
+
+    if (telephone && !validatePhone(telephone)) {
+      newErrors.telephone =
+        "Téléphone invalide (chiffres et tirets uniquement)";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
     setSaving(true);
     setFeedback(null);
+    setErrors({});
 
     try {
       const tkn = (session?.user as { accessToken?: string })?.accessToken;
-      await createClient(
+      const response = await createClient(
         {
           nomEntreprise: nomEntreprise.trim(),
           nomResponsable: nomResponsable.trim(),
@@ -40,7 +68,8 @@ export default function NewClientPage() {
         },
         tkn,
       );
-      router.push("/dashboard/clients");
+      const clientId = (response as { id: string }).id;
+      router.push(`/dashboard/clients/${clientId}`);
     } catch (error: unknown) {
       setFeedback(
         error instanceof Error
@@ -95,8 +124,15 @@ export default function NewClientPage() {
                 type="text"
                 value={telephone}
                 onChange={(e) => setTelephone(e.target.value)}
-                className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                className={`mt-2 w-full rounded-lg border px-3 py-2 text-sm ${
+                  errors.telephone
+                    ? "border-red-500 bg-red-50"
+                    : "border-gray-200"
+                }`}
               />
+              {errors.telephone && (
+                <p className="mt-1 text-sm text-red-600">{errors.telephone}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -106,8 +142,13 @@ export default function NewClientPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                className={`mt-2 w-full rounded-lg border px-3 py-2 text-sm ${
+                  errors.email ? "border-red-500 bg-red-50" : "border-gray-200"
+                }`}
               />
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+              )}
             </div>
           </div>
           <div>

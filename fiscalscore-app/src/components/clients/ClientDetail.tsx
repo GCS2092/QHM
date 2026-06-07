@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 import {
   getClientById,
   getAssignations,
@@ -17,6 +18,15 @@ import ScoreBadge from "@/components/ui-custom/ScoreBadge";
 import EvaluationPdfButton from "@/components/evaluations/EvaluationPdfButton";
 import { isAdminRole } from "@/lib/scoring";
 import type { Client, Evaluation } from "@/lib/types";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
 export default function ClientDetail({ clientId }: { clientId: string }) {
   const { data: session } = useSession();
@@ -25,13 +35,13 @@ export default function ClientDetail({ clientId }: { clientId: string }) {
   const userName = session?.user?.name ?? "";
 
   // ✅ Correct — types séparés
-type ClientWithEvals = (Client & { evaluations?: Evaluation[] }) | null;
-type AssignationMap = Record<string, number | string>;
-type EvaluatorItem = { id: number | string; username: string };
+  type ClientWithEvals = (Client & { evaluations?: Evaluation[] }) | null;
+  type AssignationMap = Record<string, number | string>;
+  type EvaluatorItem = { id: number | string; username: string };
 
-const [client, setClient] = useState<ClientWithEvals>(null);
-const [assignationIds, setAssignationIds] = useState<AssignationMap>({});
-const [evaluators, setEvaluators] = useState<EvaluatorItem[]>([]);
+  const [client, setClient] = useState<ClientWithEvals>(null);
+  const [assignationIds, setAssignationIds] = useState<AssignationMap>({});
+  const [evaluators, setEvaluators] = useState<EvaluatorItem[]>([]);
   const [selectedEvaluator, setSelectedEvaluator] = useState("");
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -42,6 +52,7 @@ const [evaluators, setEvaluators] = useState<EvaluatorItem[]>([]);
     telephone: "",
     secteur: "",
   });
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   async function reload() {
     const tkn = (session?.user as { accessToken?: string })?.accessToken;
@@ -151,10 +162,16 @@ const [evaluators, setEvaluators] = useState<EvaluatorItem[]>([]);
   }
 
   async function handleDelete() {
-    if (!client || !confirm("Supprimer définitivement ce client ?")) return;
-    const tkn = (session?.user as { accessToken?: string })?.accessToken;
-    await deleteClient(client.id, tkn);
-    window.location.href = "/dashboard/clients";
+    if (!client) return;
+    try {
+      const tkn = (session?.user as { accessToken?: string })?.accessToken;
+      await deleteClient(client.id, tkn);
+      toast.success("Client supprimé");
+      window.location.href = "/dashboard/clients";
+    } catch (error) {
+      toast.error("Erreur lors de la suppression du client");
+      console.error(error);
+    }
   }
 
   if (loading) return <div className="text-gray-500">Chargement...</div>;
@@ -186,13 +203,43 @@ const [evaluators, setEvaluators] = useState<EvaluatorItem[]>([]);
               >
                 {client.archive ? "Désarchiver" : "Archiver"}
               </button>
-              <button
-                type="button"
-                onClick={handleDelete}
-                className="rounded-lg border border-red-200 text-red-700 px-4 py-2 text-sm hover:bg-red-50"
+              <AlertDialog
+                open={showDeleteDialog}
+                onOpenChange={setShowDeleteDialog}
               >
-                Supprimer
-              </button>
+                <AlertDialogTrigger asChild>
+                  <button
+                    type="button"
+                    className="rounded-lg border border-red-200 text-red-700 px-4 py-2 text-sm hover:bg-red-50"
+                  >
+                    Supprimer
+                  </button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogTitle>
+                    Êtes-vous sûr de vouloir supprimer {client.nomEntreprise} ?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Cette action archive le client et supprime tout
+                    l&apos;historique. C&apos;est irréversible.
+                    {evaluations.length > 0 && (
+                      <>
+                        <br />
+                        <br />
+                        Ce client a {evaluations.length} évaluation
+                        {evaluations.length > 1 ? "s" : ""} qui seront aussi
+                        supprimées.
+                      </>
+                    )}
+                  </AlertDialogDescription>
+                  <div className="flex gap-2 mt-6">
+                    <AlertDialogCancel>Annuler</AlertDialogCancel>
+                    <AlertDialogAction destructive onClick={handleDelete}>
+                      Supprimer
+                    </AlertDialogAction>
+                  </div>
+                </AlertDialogContent>
+              </AlertDialog>
             </>
           ) : null}
           {!client.archive ? (

@@ -60,6 +60,8 @@ export default function QuestionnaireDetailPage() {
     questionnaire.type === "mission"
       ? "Pendant la mission"
       : "Phase de planification";
+  const hasActiveEvaluations =
+    questionnaire.evaluations?.some((e) => e.statut === "en_cours") ?? false;
 
   return (
     <div className="space-y-6">
@@ -102,7 +104,11 @@ export default function QuestionnaireDetailPage() {
         </div>
         <div className="lg:col-span-2 rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
           {isAdmin ? (
-            <QuestionsAdmin questionnaire={questionnaire} onUpdated={reload} />
+            <QuestionsAdmin
+              questionnaire={questionnaire}
+              hasActiveEvaluations={hasActiveEvaluations}
+              onUpdated={reload}
+            />
           ) : (
             <div>
               <p className="font-semibold mb-4">Questions</p>
