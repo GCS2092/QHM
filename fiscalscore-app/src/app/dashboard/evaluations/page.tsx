@@ -1,10 +1,11 @@
 ﻿"use client";
 import { useEffect, useMemo, useState } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { Plus, Pencil, ChevronUp, ChevronDown } from "lucide-react";
 import ScoreBadge from "@/components/ui-custom/ScoreBadge";
 import EvaluationPdfButton from "@/components/evaluations/EvaluationPdfButton";
-import { getEvaluations } from "@/lib/api";
+import { getEvaluations, setApiAuthToken } from "@/lib/api";
 import type { Evaluation } from "@/lib/types";
 
 type SortBy = "client" | "date" | "score";
@@ -12,6 +13,7 @@ type SortOrder = "asc" | "desc";
 type FilterStatus = "tous" | "en_cours" | "terminee";
 
 export default function EvaluationsPage() {
+  const { data: session, status } = useSession();
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,13 +24,20 @@ export default function EvaluationsPage() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   useEffect(() => {
+    // Attendre que la session soit authentifiée avant de fetcher
+    if (status !== "authenticated") return;
+
+    // Injecter le token AVANT l'appel API
+    const token = (session?.user as { accessToken?: string })?.accessToken;
+    setApiAuthToken(token);
+
     getEvaluations()
       .then(setEvaluations)
       .catch((err) =>
         setError(err.message || "Impossible de charger les évaluations"),
       )
       .finally(() => setLoading(false));
-  }, []);
+  }, [session, status]);
 
   const filtered = useMemo(
     () =>
@@ -172,36 +181,19 @@ export default function EvaluationsPage() {
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-100">
             <tr>
-              <th className="text-left px-6 py-3 text-gray-500 font-medium">
-                Client
-              </th>
-              <th className="text-left px-6 py-3 text-gray-500 font-medium">
-                Questionnaire
-              </th>
-              <th className="text-left px-6 py-3 text-gray-500 font-medium">
-                Score
-              </th>
-              <th className="text-left px-6 py-3 text-gray-500 font-medium">
-                Date
-              </th>
-              <th className="text-left px-6 py-3 text-gray-500 font-medium">
-                Évaluateur
-              </th>
-              <th className="text-left px-6 py-3 text-gray-500 font-medium">
-                Statut
-              </th>
-              <th className="text-right px-6 py-3 text-gray-500 font-medium">
-                Actions
-              </th>
+              <th className="text-left px-6 py-3 text-gray-500 font-medium">Client</th>
+              <th className="text-left px-6 py-3 text-gray-500 font-medium">Questionnaire</th>
+              <th className="text-left px-6 py-3 text-gray-500 font-medium">Score</th>
+              <th className="text-left px-6 py-3 text-gray-500 font-medium">Date</th>
+              <th className="text-left px-6 py-3 text-gray-500 font-medium">Évaluateur</th>
+              <th className="text-left px-6 py-3 text-gray-500 font-medium">Statut</th>
+              <th className="text-right px-6 py-3 text-gray-500 font-medium">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
             {loading ? (
               <tr>
-                <td
-                  colSpan={7}
-                  className="px-6 py-10 text-center text-gray-500"
-                >
+                <td colSpan={7} className="px-6 py-10 text-center text-gray-500">
                   Chargement...
                 </td>
               </tr>
@@ -213,10 +205,7 @@ export default function EvaluationsPage() {
               </tr>
             ) : paginatedData.length === 0 ? (
               <tr>
-                <td
-                  colSpan={7}
-                  className="px-6 py-10 text-center text-gray-400"
-                >
+                <td colSpan={7} className="px-6 py-10 text-center text-gray-400">
                   Aucune évaluation
                 </td>
               </tr>
@@ -244,13 +233,15 @@ export default function EvaluationsPage() {
                       <span className="text-gray-400">—</span>
                     )}
                   </td>
-                  <td className="px-6 py-4 text-gray-500">
-                    {e.dateEvaluation}
-                  </td>
+                  <td className="px-6 py-4 text-gray-500">{e.dateEvaluation}</td>
                   <td className="px-6 py-4 text-gray-600">{e.evaluateur}</td>
                   <td className="px-6 py-4">
                     <span
-                      className={`text-xs px-2 py-1 rounded-full ${e.statut === "terminee" ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"}`}
+                      className={`text-xs px-2 py-1 rounded-full ${
+                        e.statut === "terminee"
+                          ? "bg-green-50 text-green-700"
+                          : "bg-amber-50 text-amber-700"
+                      }`}
                     >
                       {e.statut === "terminee" ? "Terminée" : "En cours"}
                     </span>

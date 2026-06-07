@@ -17,6 +17,7 @@ import {
   getEvaluationById,
   createEvaluation,
   updateEvaluation,
+  setApiAuthToken,
 } from "@/lib/api";
 import { computeScoreFromNotes, getSeuil, isAdminRole } from "@/lib/scoring";
 import { commentaireAutoForNote } from "@/lib/commentaires-auto";
@@ -35,12 +36,13 @@ export default function EvaluationForm({
   editEvaluationId?: string;
 }) {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const isAdmin = isAdminRole((session?.user as { role?: string })?.role);
   const isEditMode = Boolean(editEvaluationId);
   const evaluateurName = session?.user?.name ?? "";
   const evaluateurId = Number((session?.user as { id?: string })?.id);
   const [loadingEdit, setLoadingEdit] = useState(isEditMode);
+  const [sessionReady, setSessionReady] = useState(false);
 
   const [clients, setClients] = useState<Client[]>([]);
   const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>([]);
@@ -67,7 +69,18 @@ export default function EvaluationForm({
   );
   const qType = selectedQ?.type ?? "planification";
 
+  // Étape 1 : injecter le token dès que la session est prête
   useEffect(() => {
+    if (status !== "authenticated") return;
+    const token = (session?.user as { accessToken?: string })?.accessToken;
+    setApiAuthToken(token);
+    setSessionReady(true);
+  }, [session, status]);
+
+  // Étape 2 : charger clients et questionnaires APRÈS que le token est injecté
+  useEffect(() => {
+    if (!sessionReady) return;
+
     Promise.all([getClients(), getQuestionnaires()])
       .then(([c, q]) => {
         const activeClients = c.filter((cl) => !cl.archive);
@@ -81,10 +94,11 @@ export default function EvaluationForm({
       })
       .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [sessionReady]);
 
+  // Étape 3 : charger l'évaluation en mode édition APRÈS que le token est injecté
   useEffect(() => {
-    if (!editEvaluationId) return;
+    if (!editEvaluationId || !sessionReady) return;
 
     async function loadEvaluation(id: string) {
       try {
@@ -138,7 +152,7 @@ export default function EvaluationForm({
     }
 
     loadEvaluation(editEvaluationId);
-  }, [editEvaluationId, isAdmin, router]);
+  }, [editEvaluationId, isAdmin, router, sessionReady]);
 
   useEffect(() => {
     if (!selectedQuestionnaire) return;
@@ -290,87 +304,55 @@ export default function EvaluationForm({
     }
   }
 
-  // NOTE: Autosave désactivé - l'utilisateur doit cliquer sur "Sauvegarder" ou "Terminer"
-  // pour contrôler quand l'évaluation est enregistrée et éviter les doublons/modifications involontaires
-  // useEffect(() => {
-  //   if (answeredCount === 0 && !serverEvalId) return;
-  //   const timer = setTimeout(() => {
-  //     void handleSave(true);
-  //   }, 2000);
-  //   return () => clearTimeout(timer);
-  // }, [
-  //   responses,
-  //   customQuestions,
-  //   introComment,
-  //   dateEvaluation,
-  //   selectedClient,
-  //   selectedQuestionnaire,
-  // ]);
-
-  // Prévention de navigation avec données non sauvegardées
   const isUnsaved = answeredCount > 0 && serverEvalId === null;
-
   const confirmMessage =
     "Vous avez des modifications non sauvegardées. Êtes-vous sûr de vouloir quitter sans sauvegarder ?";
 
-  // Hook beforeunload pour rechargement/fermeture de page/onglet
   useEffect(() => {
     if (!isUnsaved) return;
-
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault();
       e.returnValue = "";
       return "";
     };
-
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isUnsaved]);
 
-  // Hook pour prévention de navigation sur clics de liens
   useEffect(() => {
     if (!isUnsaved) return;
-
     const handleLinkClick = (e: MouseEvent) => {
       const target = (e.target as HTMLElement).closest("a[href]");
       if (!target) return;
       const href = target.getAttribute("href");
       if (!href || href.startsWith("#")) return;
-
       e.preventDefault();
       if (window.confirm(confirmMessage)) {
         window.location.href = href;
       }
     };
-
     document.addEventListener("click", handleLinkClick);
     return () => document.removeEventListener("click", handleLinkClick);
   }, [isUnsaved, confirmMessage]);
 
-  // Fonction de navigation sécurisée pour router.push (utility function)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const safeNavigate = useCallback(
     (path: string) => {
-      if (isUnsaved && !window.confirm(confirmMessage)) {
-        return;
-      }
+      if (isUnsaved && !window.confirm(confirmMessage)) return;
       router.push(path);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [isUnsaved],
   );
 
-  // Fonction pour revenir en arrière avec confirmation (utility function)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const safeBack = useCallback(() => {
-    if (isUnsaved && !window.confirm(confirmMessage)) {
-      return;
-    }
+    if (isUnsaved && !window.confirm(confirmMessage)) return;
     router.back();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isUnsaved]);
 
-  if (loadingEdit) {
+  if (status === "loading" || (isEditMode && loadingEdit)) {
     return (
       <div className="text-gray-500 py-12">
         Chargement de l&apos;évaluation…
@@ -559,7 +541,13 @@ export default function EvaluationForm({
               Pourcentage : <strong>{scoreComputed.pourcentage}%</strong>
             </span>
             <span
-              className={`px-2 py-0.5 rounded text-xs font-medium ${seuilPreview.couleur === "vert" ? "bg-green-100 text-green-800" : seuilPreview.couleur === "orange" ? "bg-orange-100 text-orange-800" : "bg-red-100 text-red-800"}`}
+              className={`px-2 py-0.5 rounded text-xs font-medium ${
+                seuilPreview.couleur === "vert"
+                  ? "bg-green-100 text-green-800"
+                  : seuilPreview.couleur === "orange"
+                    ? "bg-orange-100 text-orange-800"
+                    : "bg-red-100 text-red-800"
+              }`}
             >
               {seuilPreview.label}
             </span>
