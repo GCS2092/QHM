@@ -251,8 +251,8 @@ export default function EvaluationForm({
         }));
 
       const payload = {
-        client: Number(selectedClient),
-        questionnaire: Number(selectedQuestionnaire),
+        client: selectedClient,
+        questionnaire: selectedQuestionnaire,
         dateEvaluation,
         evaluateur: evaluateurName,
         evaluateurUtilisateur: evaluateurId || undefined,
