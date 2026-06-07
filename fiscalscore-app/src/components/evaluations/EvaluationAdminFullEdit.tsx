@@ -92,12 +92,17 @@ export default function EvaluationAdminFullEdit({
     setSaving(true);
     setMsg(null);
     try {
-      const reponses = rows.map((r) => ({
-        question: r.questionId,
-        questionCustom: r.questionCustomId,
-        note: r.note,
-        commentaireEvaluateur: r.commentaireEvaluateur,
-      }));
+      // ✅ Fix : exclure les réponses sans question ni questionCustom (évite le 500)
+      // et ne pas inclure les clés undefined dans le payload
+      const reponses = rows
+        .filter((r) => r.questionId || r.questionCustomId)
+        .map((r) => ({
+          note: r.note,
+          commentaireEvaluateur: r.commentaireEvaluateur,
+          ...(r.questionId ? { question: r.questionId } : {}),
+          ...(r.questionCustomId ? { questionCustom: r.questionCustomId } : {}),
+        }));
+
       const questions_custom = (evaluation.questions_custom ?? []).map((cq) => ({
         critere: cq.critere,
         indicateur: cq.indicateur,
