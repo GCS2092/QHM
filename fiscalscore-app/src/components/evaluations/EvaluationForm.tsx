@@ -290,22 +290,22 @@ export default function EvaluationForm({
     }
   }
 
-  // Autosave sur changements
-  useEffect(() => {
-    if (answeredCount === 0 && !serverEvalId) return;
-    const timer = setTimeout(() => {
-      void handleSave(true);
-    }, 2000);
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    responses,
-    customQuestions,
-    introComment,
-    dateEvaluation,
-    selectedClient,
-    selectedQuestionnaire,
-  ]);
+  // NOTE: Autosave désactivé - l'utilisateur doit cliquer sur "Sauvegarder" ou "Terminer"
+  // pour contrôler quand l'évaluation est enregistrée et éviter les doublons/modifications involontaires
+  // useEffect(() => {
+  //   if (answeredCount === 0 && !serverEvalId) return;
+  //   const timer = setTimeout(() => {
+  //     void handleSave(true);
+  //   }, 2000);
+  //   return () => clearTimeout(timer);
+  // }, [
+  //   responses,
+  //   customQuestions,
+  //   introComment,
+  //   dateEvaluation,
+  //   selectedClient,
+  //   selectedQuestionnaire,
+  // ]);
 
   // Prévention de navigation avec données non sauvegardées
   const isUnsaved = answeredCount > 0 && serverEvalId === null;
@@ -393,27 +393,49 @@ export default function EvaluationForm({
             Toutes les questions doivent être notées (0 à 3) avant de terminer.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => handleSave(true)}
-            disabled={saving}
-            className="rounded bg-gray-100 px-3 py-2 text-sm"
-          >
-            Sauvegarder
-          </button>
-          <button
-            type="button"
-            onClick={() => handleSave(false)}
-            disabled={
-              saving ||
-              answeredCount < allQuestionsCount ||
-              allQuestionsCount === 0
-            }
-            className="rounded bg-blue-600 px-3 py-2 text-sm text-white disabled:opacity-50"
-          >
-            Terminer l&apos;évaluation
-          </button>
+        <div className="flex flex-col gap-2">
+          {answeredCount > 0 && !serverEvalId && (
+            <p className="text-xs text-orange-600">
+              ⚠️ Donnees non enregistrees - Cliquez sur Sauvegarder pour
+              conserver vos reponses
+            </p>
+          )}
+          {serverEvalId && answeredCount < allQuestionsCount && (
+            <p className="text-xs text-blue-600">
+              Brouillon sauvegarde ({answeredCount}/{allQuestionsCount}{" "}
+              questions repondues)
+            </p>
+          )}
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => handleSave(true)}
+              disabled={saving}
+              className="rounded bg-gray-100 px-3 py-2 text-sm hover:bg-gray-200 transition-colors"
+            >
+              Sauvegarder le brouillon
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (
+                  window.confirm(
+                    "Etes-vous sur de vouloir terminer cette evaluation ? Cette action ne peut pas etre annulee.",
+                  )
+                ) {
+                  void handleSave(false);
+                }
+              }}
+              disabled={
+                saving ||
+                answeredCount < allQuestionsCount ||
+                allQuestionsCount === 0
+              }
+              className="rounded bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Terminer l&apos;evaluation
+            </button>
+          </div>
         </div>
       </div>
 
