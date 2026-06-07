@@ -15,29 +15,35 @@ module.exports = {
     console.log("🧹 Nettoyage des questionnaires dupliqués...");
 
     try {
-      // Récupère tous les questionnaires
-      const questionnaires = await strapi.entityService.findMany(
+      // Récupère tous les questionnaires avec questions
+      const allQuestionnaires = await strapi.entityService.findMany(
         "api::questionnaire.questionnaire",
         {
           populate: "questions",
           sort: { createdAt: "desc" },
         },
-      ) as Array<{
-        id: string | number;
-        titre: string;
-        type: string;
-        questions: Array<{ id: string | number }>;
-        createdAt?: string;
-      }>;
+      );
 
-      console.log(`📊 Total questionnaires: ${questionnaires.length}`);
+      if (!Array.isArray(allQuestionnaires)) {
+        console.log("❌ Erreur: Aucun questionnaire trouvé");
+        return;
+      }
 
-      const grouped: Record<string, typeof questionnaires> = {};
+      console.log(`📊 Total questionnaires: ${allQuestionnaires.length}`);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const grouped: Record<string, any[]> = {};
       let deletedCount = 0;
 
       // Groupe les questionnaires par titre + type + nombre de questions
-      for (const q of questionnaires) {
-        const key = `${q.titre}|${q.type}|${q.questions?.length ?? 0}`;
+      for (const q of allQuestionnaires) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const q_any = q as any;
+        const questionCount = Array.isArray(q_any.questions)
+          ? q_any.questions.length
+          : 0;
+        const key = `${q_any.titre}|${q_any.type}|${questionCount}`;
+
         if (!grouped[key]) {
           grouped[key] = [];
         }
@@ -53,7 +59,8 @@ module.exports = {
           // Garde le premier (plus récent grâce au sort desc)
           // Supprime les autres
           for (let i = 1; i < qList.length; i++) {
-            const qToDelete = qList[i];
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const qToDelete = qList[i] as any;
             try {
               await strapi.entityService.delete(
                 "api::questionnaire.questionnaire",

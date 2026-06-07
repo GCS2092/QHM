@@ -13,13 +13,11 @@
 
 module.exports = {
   async cleanup() {
-    console.log(
-      "🧹 Nettoyage des évaluations en brouillon dupliquées...",
-    );
+    console.log("🧹 Nettoyage des évaluations en brouillon dupliquées...");
 
     try {
       // Récupère toutes les évaluations en cours (brouillon)
-      const evaluations = await strapi.entityService.findMany(
+      const allEvaluations = await strapi.entityService.findMany(
         "api::evaluation.evaluation",
         {
           populate: ["client", "questionnaire"],
@@ -30,25 +28,30 @@ module.exports = {
           },
           sort: { updatedAt: "desc" },
         },
-      ) as Array<{
-        id: string | number;
-        client?: { id: string | number };
-        questionnaire?: { id: string | number };
-        evaluateur?: string;
-        statut: string;
-        updatedAt?: string;
-      }>;
-
-      console.log(
-        `📊 Total évaluations en brouillon: ${evaluations.length}`,
       );
 
-      const grouped: Record<string, typeof evaluations> = {};
+      if (!Array.isArray(allEvaluations)) {
+        console.log("❌ Erreur: Aucune évaluation trouvée");
+        return;
+      }
+
+      console.log(
+        `📋 Total évaluations en brouillon: ${allEvaluations.length}`,
+      );
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const grouped: Record<string, any[]> = {};
       let deletedCount = 0;
 
       // Groupe les évaluations par client + questionnaire + évaluateur
-      for (const ev of evaluations) {
-        const key = `${ev.client?.id ?? "null"}|${ev.questionnaire?.id ?? "null"}|${ev.evaluateur ?? "null"}`;
+      for (const ev of allEvaluations) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const ev_any = ev as any;
+        const clientId = ev_any.client?.id ?? "null";
+        const questionnaireId = ev_any.questionnaire?.id ?? "null";
+        const evaluateur = ev_any.evaluateur ?? "null";
+        const key = `${clientId}|${questionnaireId}|${evaluateur}`;
+
         if (!grouped[key]) {
           grouped[key] = [];
         }
@@ -59,14 +62,15 @@ module.exports = {
       for (const [key, evList] of Object.entries(grouped)) {
         if (evList.length > 1) {
           console.log(
-            `\n📝 Doublons trouvés: client|questionnaire|evaluateur = "${key}"`,
+            `\n📏 Doublons trouvés: client|questionnaire|evaluateur = "${key}"`,
           );
           console.log(`   ${evList.length} brouillons trouvés`);
 
           // Garde le premier (plus récent grâce au sort desc)
           // Supprime les autres
           for (let i = 1; i < evList.length; i++) {
-            const evToDelete = evList[i];
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const evToDelete = evList[i] as any;
             try {
               await strapi.entityService.delete(
                 "api::evaluation.evaluation",
