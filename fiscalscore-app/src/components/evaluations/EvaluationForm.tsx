@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 import type {
   Client,
   Questionnaire,
@@ -57,7 +58,9 @@ export default function EvaluationForm({
     new Date().toISOString().slice(0, 10),
   );
   const [saving, setSaving] = useState(false);
-  const [serverEvalId, setServerEvalId] = useState<number | string | null>(null);
+  const [serverEvalId, setServerEvalId] = useState<number | string | null>(
+    null,
+  );
 
   const selectedQ = questionnaires.find(
     (q) => String(q.id) === selectedQuestionnaire,
@@ -202,6 +205,7 @@ export default function EvaluationForm({
     };
     setCustomQuestions((prev) => [...prev, q]);
     setResponses((prev) => ({ ...prev, [`c_${tempId}`]: { note: null } }));
+    toast.success("Question personnalisée ajoutée");
   }
 
   function updateCustomQuestion(idx: number, patch: Partial<QuestionCustom>) {
@@ -261,19 +265,26 @@ export default function EvaluationForm({
         const res = await createEvaluation(payload);
         const createdId = res?.data?.id ?? res?.id ?? null;
         if (createdId) setServerEvalId(createdId);
-        if (!draft && createdId) {
+        if (draft) {
+          toast.success("Évaluation enregistrée automatiquement");
+        } else if (createdId) {
+          toast.success("Évaluation terminée avec succès");
           router.push(`/dashboard/evaluations/${createdId}`);
           return;
         }
       } else {
         await updateEvaluation(serverEvalId, payload);
-        if (!draft) {
+        if (draft) {
+          toast.success("Modifications enregistrées");
+        } else {
+          toast.success("Évaluation mise à jour avec succès");
           router.push(`/dashboard/evaluations/${serverEvalId}`);
           return;
         }
       }
     } catch (err) {
       console.error(err);
+      toast.error("Erreur lors de l'enregistrement. Veuillez réessayer.");
     } finally {
       setSaving(false);
     }
@@ -354,9 +365,11 @@ export default function EvaluationForm({
               className="mt-2 w-full rounded-lg border px-3 py-2 text-sm"
               disabled={Boolean(initialClientId) || isEditMode}
             >
+              <option value="">— Sélectionner un client —</option>
               {clients.map((c) => (
                 <option key={String(c.id)} value={c.id}>
-                  {c.nomEntreprise} — {c.nomResponsable}
+                  {c.nomEntreprise}
+                  {c.nomResponsable ? ` (${c.nomResponsable})` : ""}
                 </option>
               ))}
             </select>
@@ -424,6 +437,25 @@ export default function EvaluationForm({
             placeholder="Synthèse en fin d'évaluation"
           />
         </div>
+
+        {selectedClient && (
+          <div className="rounded-lg border-2 border-blue-300 bg-blue-50 p-4">
+            <p className="text-xs font-medium text-blue-700 uppercase tracking-wide">
+              Client sélectionné
+            </p>
+            <p className="text-lg font-bold text-blue-900 mt-1">
+              {
+                clients.find((c) => String(c.id) === selectedClient)
+                  ?.nomEntreprise
+              }
+            </p>
+            <p className="text-sm text-blue-700 mt-0.5">
+              Responsable :{" "}
+              {clients.find((c) => String(c.id) === selectedClient)
+                ?.nomResponsable || "—"}
+            </p>
+          </div>
+        )}
 
         <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-gray-50 p-3">
           <span className="text-sm text-gray-600">

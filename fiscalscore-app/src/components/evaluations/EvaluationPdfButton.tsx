@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import { toast } from "sonner";
 import { getEvaluationById } from "@/lib/api";
 import type { Evaluation } from "@/lib/types";
 
@@ -13,7 +14,7 @@ const EvaluationPdfExport = dynamic(() => import("./EvaluationPdfExport"), {
 });
 
 type Props = {
-  evaluationId: number | string;  // ← changer ici
+  evaluationId: number | string; // ← changer ici
   evaluation?: Evaluation;
   variant?: "default" | "compact";
   onClick?: (e: React.MouseEvent) => void;
@@ -54,16 +55,17 @@ export default function EvaluationPdfButton({
     return null;
   }
 
-  const stopNav = (e: React.MouseEvent) => {
+  const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    toast.success("PDF téléchargé avec succès");
     onClick?.(e);
   };
 
   if (variant === "compact") {
     return (
       <span
-        onClick={stopNav}
+        onClick={handleClick}
         onKeyDown={(e) => e.stopPropagation()}
         role="presentation"
       >
@@ -77,7 +79,7 @@ export default function EvaluationPdfButton({
   }
 
   return (
-    <span onClick={stopNav} role="presentation">
+    <span onClick={handleClick} role="presentation">
       <EvaluationPdfExport evaluation={evaluation} />
     </span>
   );
