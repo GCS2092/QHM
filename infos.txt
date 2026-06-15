@@ -247,3 +247,7 @@ Deux points ouverts que tu dois décider avant de commencer à coder :
 **La sauvegarde automatique** — toutes les combien de minutes ? Ou uniquement à chaque changement de note ? La deuxième option est plus propre techniquement (sauvegarde à chaque interaction) mais génère plus de requêtes.
 
 **L'évaluation par deux évaluateurs sur le même client** — si deux évaluateurs remplissent un questionnaire sur le même client, est-ce que l'admin voit les deux séparément dans l'historique, ou est-ce qu'il faut une vue de synthèse qui compare les deux ? Pour la V1 je recommande de les garder séparés et de ne pas faire de synthèse automatique, ça peut venir en V2.
+
+
+Conditionner le fait que s'il n'ya pas une repose pour  les 7 questions et plus qu on ne soit pas cable de produire une evaluation
+

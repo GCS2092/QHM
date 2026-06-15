@@ -25,25 +25,26 @@ export default function EvaluationDetailPage() {
   const params = useParams();
   const id = String(params?.id ?? "");
   const { data: session } = useSession();
+  const token = (session?.user as { accessToken?: string })?.accessToken;
   const isAdmin = isAdminRole((session?.user as { role?: string })?.role);
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
   const [loading, setLoading] = useState(true);
 
   const reload = useCallback(() => {
     if (!id) return;
-    getEvaluationById(id)
+    getEvaluationById(id, token)
       .then(setEvaluation)
       .catch(() => setEvaluation(null));
-  }, [id]);
+  }, [id, token]);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || !token) return;
     void (async () => {
       setLoading(true);
       await reload();
       setLoading(false);
     })();
-  }, [id, reload]);
+  }, [id, reload, token]);
 
   if (loading) return <div className="text-gray-500">Chargement...</div>;
   if (!evaluation) {
@@ -182,7 +183,7 @@ export default function EvaluationDetailPage() {
                 ? commentaireAutoForNote(r.note, r.question)
                 : "";
               return (
-                <tr key={r.id} className={isCustom ? "bg-blue-50/50" : ""}>
+                <tr key={String(r.id)} className={isCustom ? "bg-blue-50/50" : ""}>
                   <td className="px-4 py-3">
                     {q?.critere}
                     {isCustom ? " *" : ""}
