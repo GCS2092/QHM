@@ -20,55 +20,55 @@ const styles = StyleSheet.create({
   page: {
     fontFamily: "Helvetica",
     fontSize: 10,
-    padding: 40,
+    padding: 30,
     color: "#1f2937",
   },
   header: {
-    marginBottom: 24,
+    marginBottom: 14,
     borderBottomWidth: 2,
     borderColor: "#1f2937",
-    paddingBottom: 12,
+    paddingBottom: 8,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "bold",
     color: "#1f2937",
     marginBottom: 2,
   },
   headerSubtitle: {
-    fontSize: 11,
+    fontSize: 10,
     color: "#6b7280",
   },
 
   // Layout deux colonnes
   mainContainer: {
     flexDirection: "row",
-    gap: 20,
-    marginBottom: 20,
+    gap: 16,
+    marginBottom: 12,
   },
   leftColumn: {
     width: "50%",
-    paddingRight: 10,
+    paddingRight: 8,
   },
   rightColumn: {
     width: "50%",
-    paddingLeft: 10,
+    paddingLeft: 8,
   },
 
   section: {
-    marginBottom: 16,
+    marginBottom: 10,
   },
   sectionTitle: {
     fontSize: 12,
     fontWeight: "bold",
     color: "#1f2937",
-    marginBottom: 8,
+    marginBottom: 5,
     borderBottomWidth: 1,
     borderColor: "#e5e7eb",
-    paddingBottom: 4,
+    paddingBottom: 3,
   },
   row: {
-    marginBottom: 4,
+    marginBottom: 3,
     fontSize: 10,
     flexDirection: "row",
   },
@@ -84,62 +84,57 @@ const styles = StyleSheet.create({
 
   // Score et seuil
   scoreBox: {
-    padding: 12,
-    marginBottom: 12,
+    padding: 9,
+    marginBottom: 8,
     borderRadius: 4,
     borderWidth: 1,
   },
   scoreTitle: {
     fontSize: 11,
     fontWeight: "bold",
-    marginBottom: 6,
+    marginBottom: 5,
   },
   scoreRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 4,
+    marginBottom: 3,
     fontSize: 10,
   },
   gaugeOuter: {
-    height: 16,
+    height: 14,
     backgroundColor: "#e5e7eb",
     borderRadius: 4,
-    marginVertical: 8,
+    marginVertical: 6,
   },
   gaugeInner: {
-    height: 16,
+    height: 14,
     borderRadius: 4,
   },
   scoreComment: {
     fontSize: 9,
-    marginTop: 8,
+    marginTop: 6,
     fontStyle: "italic",
     lineHeight: 1.4,
   },
 
   // Graphiques
   chartSection: {
-    marginBottom: 16,
+    marginBottom: 10,
   },
   chartTitle: {
     fontSize: 11,
     fontWeight: "bold",
-    marginBottom: 8,
+    marginBottom: 5,
   },
   chartRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 6,
+    marginBottom: 4,
   },
   chartLabel: {
     width: "100%",
     fontSize: 8,
     marginBottom: 2,
-  },
-  chartSubLabel: {
-    fontSize: 7,
-    color: "#6b7280",
-    marginBottom: 4,
   },
   chartBarBg: {
     width: "45%",
@@ -159,13 +154,46 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 
+  // Version compacte (une seule ligne par question) utilisée pour les
+  // questionnaires "pendant la mission". Le détail complet (indicateur,
+  // énoncé, commentaire) est déjà affiché dans le tableau plus bas, donc on
+  // évite de le répéter ici : c'est ce qui faisait gonfler le nombre de pages.
+  chartRowCompact: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 3,
+  },
+  chartShortLabel: {
+    width: "14%",
+    fontSize: 8,
+    fontWeight: "bold",
+    color: "#374151",
+  },
+  chartBarBgCompact: {
+    flex: 1,
+    height: 9,
+    backgroundColor: "#f3f4f6",
+    borderRadius: 2,
+    marginHorizontal: 6,
+  },
+  chartBarFillCompact: {
+    height: 9,
+    borderRadius: 2,
+  },
+  chartValueCompact: {
+    width: "14%",
+    fontSize: 8,
+    textAlign: "right",
+    fontWeight: "bold",
+  },
+
   // Table
   tableHeader: {
     flexDirection: "row",
     backgroundColor: "#f3f4f6",
     borderBottomWidth: 1.5,
     borderColor: "#1f2937",
-    paddingVertical: 6,
+    paddingVertical: 5,
     paddingHorizontal: 4,
     fontWeight: "bold",
     fontSize: 9,
@@ -174,25 +202,25 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     borderBottomWidth: 0.5,
     borderColor: "#d1d5db",
-    paddingVertical: 5,
+    paddingVertical: 4,
     paddingHorizontal: 4,
     fontSize: 9,
   },
-  colCritere: { width: "15%" },
-  colIndicateur: { width: "15%" },
-  colQuestion: { width: "35%" },
-  colNote: { width: "8%", textAlign: "center" },
-  colCommentaire: { width: "27%" },
+  colCritere: { width: "13%" },
+  colIndicateur: { width: "14%" },
+  colQuestion: { width: "31%" },
+  colNote: { width: "7%", textAlign: "center" },
+  colCommentaire: { width: "35%" },
 
   // Sections
   sectionDivider: {
     borderTopWidth: 1,
     borderColor: "#e5e7eb",
-    marginVertical: 12,
+    marginVertical: 8,
   },
   footer: {
-    marginTop: 20,
-    paddingTop: 12,
+    marginTop: 10,
+    paddingTop: 6,
     borderTopWidth: 1,
     borderColor: "#e5e7eb",
     fontSize: 8,
@@ -203,6 +231,11 @@ const styles = StyleSheet.create({
     fontSize: 7,
     color: "#dc2626",
     fontWeight: "bold",
+  },
+  emptyState: {
+    fontSize: 9,
+    color: "#6b7280",
+    fontStyle: "italic",
   },
 });
 
@@ -228,9 +261,12 @@ function buildBarPdfData(evaluation: Evaluation) {
     const cq = r.questionCustom;
     const critere = q?.critere ?? cq?.critere ?? "—";
     const indicateur = q?.indicateur ?? cq?.indicateur ?? "—";
+    // Ce fallback "Question {i+1}" ne devrait apparaître que si la question
+    // liée n'existe vraiment plus côté CMS. S'il s'affiche systématiquement,
+    // c'est le signe que la requête qui charge l'évaluation ne "populate"
+    // pas reponses.question / reponses.questionCustom (voir explication).
     const question = q?.texte ?? cq?.texte ?? `Question ${i + 1}`;
     return {
-      label: `Q${i + 1}. ${critere !== "—" ? critere.slice(0, 22) : question.slice(0, 22)}`,
       critere,
       indicateur,
       question,
@@ -244,6 +280,7 @@ function EvaluationPdfDocument({ evaluation }: { evaluation: Evaluation }) {
   const type = (evaluation.questionnaire?.type ??
     "planification") as QuestionnaireType;
   const seuil = getSeuil(evaluation.pourcentageScore, type);
+  const isPlanification = type === "planification";
 
   const seuilBg =
     seuil.couleur === "vert"
@@ -264,10 +301,15 @@ function EvaluationPdfDocument({ evaluation }: { evaluation: Evaluation }) {
         ? "#f97316"
         : "#ef4444";
 
-  const chartData =
-    type === "planification"
-      ? buildRadarPdfData(evaluation)
-      : buildBarPdfData(evaluation);
+  const radarData = isPlanification ? buildRadarPdfData(evaluation) : [];
+  const barData = isPlanification ? [] : buildBarPdfData(evaluation);
+  const hasReponses = (evaluation.reponses ?? []).length > 0;
+  // On ne se fie plus à un éventuel champ "questions_custom" (qui n'existe
+  // pas forcément sur l'objet Evaluation) : on regarde directement si une
+  // des réponses pointe vers une questionCustom.
+  const hasCustomQuestion = (evaluation.reponses ?? []).some((r) =>
+    Boolean(r.questionCustom),
+  );
 
   return (
     <Document>
@@ -375,7 +417,7 @@ function EvaluationPdfDocument({ evaluation }: { evaluation: Evaluation }) {
               <View style={styles.row}>
                 <Text style={styles.rowLabel}>Type :</Text>
                 <Text style={styles.rowValue}>
-                  {type === "planification"
+                  {isPlanification
                     ? "Phase de planification"
                     : "Pendant la mission"}
                 </Text>
@@ -387,12 +429,12 @@ function EvaluationPdfDocument({ evaluation }: { evaluation: Evaluation }) {
                 </Text>
               </View>
               {evaluation.commentaireGlobal ? (
-                <View style={[styles.row, { marginTop: 8 }]}>
+                <View style={[styles.row, { marginTop: 6 }]}>
                   <Text style={styles.rowLabel}>Introduction :</Text>
                 </View>
               ) : null}
               {evaluation.commentaireGlobal ? (
-                <Text style={{ fontSize: 9, marginBottom: 8, lineHeight: 1.3 }}>
+                <Text style={{ fontSize: 9, marginBottom: 6, lineHeight: 1.3 }}>
                   {evaluation.commentaireGlobal}
                 </Text>
               ) : null}
@@ -401,78 +443,72 @@ function EvaluationPdfDocument({ evaluation }: { evaluation: Evaluation }) {
             {/* Graphiques */}
             <View style={styles.chartSection}>
               <Text style={styles.chartTitle}>
-                {type === "planification"
-                  ? "Analyse par critère"
-                  : "Analyse par question"}
+                {isPlanification ? "Analyse par critère" : "Analyse par question"}
               </Text>
-              {chartData.map((item, i) => {
-                const widthPct =
-                  type === "planification"
-                    ? (item as { pct: number }).pct
-                    : Math.round(((item as { note: number }).note / 3) * 100);
-                const color =
-                  type === "planification"
-                    ? widthPct >= 86
+
+              {/* Vue "planification" : une ligne par critère (radar) */}
+              {isPlanification &&
+                radarData.map((item, i) => {
+                  const color =
+                    item.pct >= 86
                       ? "#22c55e"
-                      : widthPct >= 57
+                      : item.pct >= 57
                         ? "#f97316"
-                        : "#ef4444"
-                    : noteBarColor((item as { note: number }).note);
-                const value =
-                  type === "planification"
-                    ? `${(item as { pct: number }).pct}%`
-                    : String((item as { note: number }).note);
-                if (type === "planification") {
-                  const label = (item as { label: string }).label;
+                        : "#ef4444";
                   return (
                     <View key={i} style={styles.chartRow}>
-                      <Text style={styles.chartLabel}>{label}</Text>
+                      <Text style={styles.chartLabel}>{item.label}</Text>
                       <View style={styles.chartBarBg}>
                         <View
                           style={[
                             styles.chartBarFill,
-                            { width: `${widthPct}%`, backgroundColor: color },
+                            { width: `${item.pct}%`, backgroundColor: color },
                           ]}
                         />
                       </View>
-                      <Text style={styles.chartValue}>{value}</Text>
+                      <Text style={styles.chartValue}>{item.pct}%</Text>
                     </View>
                   );
-                }
-                const barItem = item as {
-                  label: string;
-                  critere: string;
-                  indicateur: string;
-                  question: string;
-                  note: number;
-                  custom: boolean;
-                };
-                return (
-                  <View key={i} style={{ marginBottom: 8 }}>
-                    <Text style={styles.chartLabel}>
-                      {barItem.label}
-                      {barItem.custom ? " *" : ""}
-                    </Text>
-                    <Text style={styles.chartSubLabel}>
-                      Indicateur : {barItem.indicateur}
-                    </Text>
-                    <Text style={styles.chartSubLabel}>
-                      Question : {barItem.question.slice(0, 120)}
-                    </Text>
-                    <View style={styles.chartRow}>
-                      <View style={[styles.chartBarBg, { width: "85%" }]}>
+                })}
+
+              {/* Vue "pendant la mission" : une ligne compacte par question.
+                  Le détail (indicateur / énoncé / commentaire) est dans le
+                  tableau "Détail des réponses" plus bas pour éviter les
+                  doublons et limiter le nombre de pages. */}
+              {!isPlanification && barData.length === 0 ? (
+                <Text style={styles.emptyState}>
+                  Aucune réponse enregistrée.
+                </Text>
+              ) : null}
+
+              {!isPlanification &&
+                barData.map((item, i) => {
+                  const widthPct = Math.round((item.note / 3) * 100);
+                  const color = noteBarColor(item.note);
+                  return (
+                    <View
+                      key={i}
+                      style={styles.chartRowCompact}
+                      wrap={false}
+                    >
+                      <Text style={styles.chartShortLabel}>
+                        Q{i + 1}
+                        {item.custom ? " *" : ""}
+                      </Text>
+                      <View style={styles.chartBarBgCompact}>
                         <View
                           style={[
-                            styles.chartBarFill,
+                            styles.chartBarFillCompact,
                             { width: `${widthPct}%`, backgroundColor: color },
                           ]}
                         />
                       </View>
-                      <Text style={styles.chartValue}>Note {value}/3</Text>
+                      <Text style={styles.chartValueCompact}>
+                        {item.note}/3
+                      </Text>
                     </View>
-                  </View>
-                );
-              })}
+                  );
+                })}
             </View>
           </View>
         </View>
@@ -490,29 +526,47 @@ function EvaluationPdfDocument({ evaluation }: { evaluation: Evaluation }) {
             <Text style={styles.colNote}>Note</Text>
             <Text style={styles.colCommentaire}>Commentaire</Text>
           </View>
-          {evaluation.reponses?.map((r, i) => {
-            const q = r.question;
-            const cq = r.questionCustom;
-            const isCustom = Boolean(cq);
-            return (
-              <View key={i} style={styles.tableRow}>
-                <Text style={styles.colCritere}>
-                  {(q?.critere ?? cq?.critere ?? "") + (isCustom ? " *" : "")}
-                </Text>
-                <Text style={styles.colIndicateur}>
-                  {q?.indicateur ?? cq?.indicateur ?? ""}
-                </Text>
-                <Text style={styles.colQuestion}>
-                  {q?.texte ?? cq?.texte ?? ""}
-                </Text>
-                <Text style={styles.colNote}>{String(r.note)}</Text>
-                <Text style={styles.colCommentaire}>
-                  {r.commentaireEvaluateur ?? ""}
-                </Text>
-              </View>
-            );
-          })}
-          {(evaluation.questions_custom ?? []).length > 0 ? (
+
+          {!hasReponses ? (
+            <View style={styles.tableRow}>
+              <Text style={styles.emptyState}>
+                Aucune réponse enregistrée pour cette évaluation.
+              </Text>
+            </View>
+          ) : (
+            evaluation.reponses?.map((r, i) => {
+              const q = r.question;
+              const cq = r.questionCustom;
+              const isCustom = Boolean(cq);
+              return (
+                <View
+                  key={i}
+                  wrap={false}
+                  style={[
+                    styles.tableRow,
+                    i % 2 === 1 ? { backgroundColor: "#f9fafb" } : {},
+                  ]}
+                >
+                  <Text style={styles.colCritere}>
+                    {(q?.critere ?? cq?.critere ?? "—") +
+                      (isCustom ? " *" : "")}
+                  </Text>
+                  <Text style={styles.colIndicateur}>
+                    {q?.indicateur ?? cq?.indicateur ?? "—"}
+                  </Text>
+                  <Text style={styles.colQuestion}>
+                    {q?.texte ?? cq?.texte ?? "—"}
+                  </Text>
+                  <Text style={styles.colNote}>{String(r.note)}</Text>
+                  <Text style={styles.colCommentaire}>
+                    {r.commentaireEvaluateur || "—"}
+                  </Text>
+                </View>
+              );
+            })
+          )}
+
+          {hasCustomQuestion ? (
             <Text style={{ fontSize: 8, color: "#666", marginTop: 6 }}>
               * Question personnalisée
             </Text>
