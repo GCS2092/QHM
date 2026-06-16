@@ -349,8 +349,18 @@ export async function getQuestionnaires(
   const res = await strapiGet(
     "/questionnaires",
     {
-      "populate[questions]": "*",
-      "populate[evaluations]": "*",
+      "populate[questions][fields][0]": "texte",
+      "populate[questions][fields][1]": "critere",
+      "populate[questions][fields][2]": "indicateur",
+      "populate[questions][fields][3]": "ordre",
+      "populate[questions][fields][4]": "commentaireZero",
+      "populate[questions][fields][5]": "commentaireUn",
+      "populate[questions][fields][6]": "commentaireDeux",
+      "populate[questions][fields][7]": "commentaireTrois",
+      "populate[evaluations][fields][0]": "id",
+      "populate[evaluations][fields][1]": "pourcentageScore",
+      "populate[evaluations][fields][2]": "dateEvaluation",
+      "populate[evaluations][fields][3]": "statut",
       sort: "titre:asc",
     },
     token(tkn),
@@ -368,8 +378,18 @@ export async function getQuestionnaireById(
   const res = await strapiGet(
     `/questionnaires/${id}`,
     {
-      "populate[questions]": "*",
-      "populate[evaluations]": "*",
+      "populate[questions][fields][0]": "texte",
+      "populate[questions][fields][1]": "critere",
+      "populate[questions][fields][2]": "indicateur",
+      "populate[questions][fields][3]": "ordre",
+      "populate[questions][fields][4]": "commentaireZero",
+      "populate[questions][fields][5]": "commentaireUn",
+      "populate[questions][fields][6]": "commentaireDeux",
+      "populate[questions][fields][7]": "commentaireTrois",
+      "populate[evaluations][fields][0]": "id",
+      "populate[evaluations][fields][1]": "pourcentageScore",
+      "populate[evaluations][fields][2]": "dateEvaluation",
+      "populate[evaluations][fields][3]": "statut",
     },
     token(tkn),
   );
@@ -394,13 +414,14 @@ export async function deleteQuestionnaire(id: number | string, tkn?: string) {
 }
 
 // ─── EVALUATIONS ─────────────────────────────────────────────────────────────
-
 export async function getEvaluations(tkn?: string): Promise<Evaluation[]> {
   const res = await strapiGet(
     "/evaluations",
     {
-      "populate[client]": "*",
-      "populate[questionnaire]": "*",
+      "populate[client][fields][0]": "nomEntreprise",
+      "populate[client][fields][1]": "nomResponsable",
+      "populate[questionnaire][fields][0]": "titre",
+      "populate[questionnaire][fields][1]": "type",
       sort: "dateEvaluation:desc",
     },
     token(tkn),
@@ -418,11 +439,39 @@ export async function getEvaluationById(
   const res = await strapiGet(
     `/evaluations/${id}`,
     {
-      "populate[client]": "*",
-      "populate[questionnaire][populate][questions]": "*",
-      "populate[reponses][populate][question]": "*",
-      "populate[reponses][populate][questionCustom]": "*",
-      "populate[questions_custom]": "*",
+      "populate[client][fields][0]": "nomEntreprise",
+      "populate[client][fields][1]": "nomResponsable",
+      "populate[client][fields][2]": "email",
+      "populate[client][fields][3]": "telephone",
+      "populate[client][fields][4]": "secteur",
+      "populate[questionnaire][fields][0]": "titre",
+      "populate[questionnaire][fields][1]": "type",
+      "populate[questionnaire][populate][questions][fields][0]": "texte",
+      "populate[questionnaire][populate][questions][fields][1]": "critere",
+      "populate[questionnaire][populate][questions][fields][2]": "indicateur",
+      "populate[questionnaire][populate][questions][fields][3]": "ordre",
+      "populate[questionnaire][populate][questions][fields][4]": "commentaireZero",
+      "populate[questionnaire][populate][questions][fields][5]": "commentaireUn",
+      "populate[questionnaire][populate][questions][fields][6]": "commentaireDeux",
+      "populate[questionnaire][populate][questions][fields][7]": "commentaireTrois",
+      "populate[reponses][fields][0]": "note",
+      "populate[reponses][fields][1]": "commentaireEvaluateur",
+      "populate[reponses][populate][question][fields][0]": "texte",
+      "populate[reponses][populate][question][fields][1]": "critere",
+      "populate[reponses][populate][question][fields][2]": "indicateur",
+      "populate[reponses][populate][question][fields][3]": "ordre",
+      "populate[reponses][populate][question][fields][4]": "commentaireZero",
+      "populate[reponses][populate][question][fields][5]": "commentaireUn",
+      "populate[reponses][populate][question][fields][6]": "commentaireDeux",
+      "populate[reponses][populate][question][fields][7]": "commentaireTrois",
+      "populate[reponses][populate][questionCustom][fields][0]": "critere",
+      "populate[reponses][populate][questionCustom][fields][1]": "indicateur",
+      "populate[reponses][populate][questionCustom][fields][2]": "texte",
+      "populate[reponses][populate][questionCustom][fields][3]": "ordre",
+      "populate[questions_custom][fields][0]": "critere",
+      "populate[questions_custom][fields][1]": "indicateur",
+      "populate[questions_custom][fields][2]": "texte",
+      "populate[questions_custom][fields][3]": "ordre",
     },
     token(tkn),
   );
@@ -437,18 +486,18 @@ export async function getAnalyticsSummary(
 ): Promise<AnalyticsSummary> {
   const [clientsRes, evaluationsRes, questionnairesRes] = await Promise.all([
     strapiGet("/clients", { "fields[0]": "id" }, token(tkn)),
-    strapiGet(
-      "/evaluations",
-      {
-        "populate[client]": "*",
-        "populate[questionnaire]": "*",
-        "fields[0]": "pourcentageScore",
-        "fields[1]": "dateEvaluation",
-        "fields[2]": "statut",
-        sort: "dateEvaluation:desc",
-      },
-      token(tkn),
-    ),
+   strapiGet(
+  "/evaluations",
+  {
+    "populate[client][fields][0]": "nomEntreprise",
+    "populate[questionnaire][fields][0]": "type",
+    "fields[0]": "pourcentageScore",
+    "fields[1]": "dateEvaluation",
+    "fields[2]": "statut",
+    sort: "dateEvaluation:desc",
+  },
+  token(tkn),
+),
     strapiGet(
       "/questionnaires",
       { "fields[0]": "id", "fields[1]": "actif" },
