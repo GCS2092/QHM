@@ -1,24 +1,27 @@
 ﻿"use client";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { FileText, Plus, Eye, Edit, Trash2 } from "lucide-react";
 import { getQuestionnaires, deleteQuestionnaire } from "@/lib/api";
 import type { Questionnaire } from "@/lib/types";
 
 export default function QuestionnairesPage() {
+  const { status } = useSession();
   const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<number | string | null>(null);
 
   useEffect(() => {
+    if (status !== "authenticated") return;
     getQuestionnaires()
       .then(setQuestionnaires)
       .catch((err) =>
         setError(err.message || "Impossible de charger les questionnaires"),
       )
       .finally(() => setLoading(false));
-  }, []);
+  }, [status]);
 
   const availableCount = useMemo(() => questionnaires.length, [questionnaires]);
 

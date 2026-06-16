@@ -58,16 +58,16 @@ export default function QuestionnaireEditForm({
 
   return (
     <div className="space-y-6">
-      {/* Banneau d'alerte si évaluations en cours */}
       {hasActiveEvaluations && (
         <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-800">
           <div className="flex gap-3">
             <div className="text-lg leading-none pt-0.5">⚠️</div>
             <div>
-              <p className="font-medium">Attention</p>
+              <p className="font-medium">Évaluations en cours</p>
               <p className="text-sm mt-1">
-                Des évaluations sont en cours. Les questions ne peuvent pas être
-                modifiées tant que vous les terminez.
+                Des évaluations sont en cours sur ce questionnaire : seules les
+                questions de base sont verrouillées (pas le titre ni la
+                description).
               </p>
             </div>
           </div>
@@ -84,8 +84,7 @@ export default function QuestionnaireEditForm({
               type="text"
               value={titre}
               onChange={(event) => setTitre(event.target.value)}
-              disabled={hasActiveEvaluations}
-              className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
               placeholder="Nom du questionnaire"
             />
           </div>
@@ -96,8 +95,7 @@ export default function QuestionnaireEditForm({
             <textarea
               value={description}
               onChange={(event) => setDescription(event.target.value)}
-              disabled={hasActiveEvaluations}
-              className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
               rows={4}
               placeholder="Brève description du questionnaire"
             />
@@ -111,8 +109,7 @@ export default function QuestionnaireEditForm({
               onChange={(e) =>
                 setType(e.target.value as "planification" | "mission")
               }
-              disabled={hasActiveEvaluations}
-              className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
             >
               <option value="planification">
                 Phase de planification (radar, seuils 86/57%)
@@ -128,8 +125,7 @@ export default function QuestionnaireEditForm({
               type="checkbox"
               checked={actif}
               onChange={(event) => setActif(event.target.checked)}
-              disabled={hasActiveEvaluations}
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
             <label htmlFor="actif" className="text-sm text-gray-700">
               Actif
@@ -141,7 +137,7 @@ export default function QuestionnaireEditForm({
           <div className="flex justify-end">
             <button
               type="submit"
-              disabled={saving || hasActiveEvaluations}
+              disabled={saving}
               className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving ? "Mise à jour en cours..." : "Enregistrer"}

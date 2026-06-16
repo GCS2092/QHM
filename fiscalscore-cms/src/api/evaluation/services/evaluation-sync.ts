@@ -12,6 +12,26 @@ type CustomQuestionInput = {
   ordre?: number;
 };
 
+async function recalculateEvaluationScores(strapi: any, evaluationId: number) {
+  const reponses = await strapi.entityService.findMany('api::reponse.reponse', {
+    filters: { evaluation: evaluationId },
+    fields: ['note'],
+  });
+  const notes = (reponses ?? [])
+    .map((r: { note?: number }) => Number(r.note ?? 0))
+    .filter((n: number) => n > 0);
+  const scoreMaxReel = notes.length * 3;
+  const scoreFinal = notes.reduce((sum: number, n: number) => sum + n, 0);
+  const pourcentageScore =
+    scoreMaxReel > 0 ? Math.round((scoreFinal / scoreMaxReel) * 100) : 0;
+
+  await strapi.entityService.update('api::evaluation.evaluation', evaluationId, {
+    data: { scoreFinal, scoreMaxReel, pourcentageScore },
+  });
+
+  return { scoreFinal, scoreMaxReel, pourcentageScore };
+}
+
 export async function syncEvaluationRelations(
   strapi: any,
   evaluationId: number,
@@ -67,4 +87,10 @@ export async function syncEvaluationRelations(
     }
     await strapi.entityService.create('api::reponse.reponse', { data });
   }
+
+  if (payload.reponses !== undefined) {
+    await recalculateEvaluationScores(strapi, evaluationId);
+  }
 }
+
+export { recalculateEvaluationScores };

@@ -336,9 +336,13 @@ export default function QuestionsAdmin({
             >
               <div>
                 <span className="text-xs text-gray-400 mr-2">#{idx + 1}</span>
-                <span className="font-medium text-sm">
-                  {q.critere} — {q.texte}
+                <span className="font-medium text-sm block">
+                  {q.critere ?? "—"}
                 </span>
+                {q.indicateur ? (
+                  <p className="text-xs text-gray-500 mt-1">{q.indicateur}</p>
+                ) : null}
+                <p className="text-sm text-gray-700 mt-1">{q.texte}</p>
               </div>
               <div className="flex gap-2 shrink-0">
                 <button

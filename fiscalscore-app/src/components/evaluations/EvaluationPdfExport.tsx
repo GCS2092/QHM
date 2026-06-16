@@ -132,8 +132,14 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   chartLabel: {
-    width: "40%",
-    fontSize: 9,
+    width: "100%",
+    fontSize: 8,
+    marginBottom: 2,
+  },
+  chartSubLabel: {
+    fontSize: 7,
+    color: "#6b7280",
+    marginBottom: 4,
   },
   chartBarBg: {
     width: "45%",
@@ -217,13 +223,21 @@ function buildRadarPdfData(evaluation: Evaluation) {
 }
 
 function buildBarPdfData(evaluation: Evaluation) {
-  return (evaluation.reponses ?? []).map((r, i) => ({
-    label: (r.question?.texte ?? r.questionCustom?.texte ?? `Q${i + 1}`).slice(
-      0,
-      40,
-    ),
-    note: r.note,
-  }));
+  return (evaluation.reponses ?? []).map((r, i) => {
+    const q = r.question;
+    const cq = r.questionCustom;
+    const critere = q?.critere ?? cq?.critere ?? "—";
+    const indicateur = q?.indicateur ?? cq?.indicateur ?? "—";
+    const question = q?.texte ?? cq?.texte ?? `Question ${i + 1}`;
+    return {
+      label: `Q${i + 1}. ${critere !== "—" ? critere.slice(0, 22) : question.slice(0, 22)}`,
+      critere,
+      indicateur,
+      question,
+      note: r.note,
+      custom: Boolean(cq),
+    };
+  });
 }
 
 function EvaluationPdfDocument({ evaluation }: { evaluation: Evaluation }) {
@@ -404,26 +418,58 @@ function EvaluationPdfDocument({ evaluation }: { evaluation: Evaluation }) {
                         ? "#f97316"
                         : "#ef4444"
                     : noteBarColor((item as { note: number }).note);
-                const label =
-                  type === "planification"
-                    ? (item as { label: string }).label
-                    : (item as { label: string }).label;
                 const value =
                   type === "planification"
                     ? `${(item as { pct: number }).pct}%`
                     : String((item as { note: number }).note);
-                return (
-                  <View key={i} style={styles.chartRow}>
-                    <Text style={styles.chartLabel}>{label}</Text>
-                    <View style={styles.chartBarBg}>
-                      <View
-                        style={[
-                          styles.chartBarFill,
-                          { width: `${widthPct}%`, backgroundColor: color },
-                        ]}
-                      />
+                if (type === "planification") {
+                  const label = (item as { label: string }).label;
+                  return (
+                    <View key={i} style={styles.chartRow}>
+                      <Text style={styles.chartLabel}>{label}</Text>
+                      <View style={styles.chartBarBg}>
+                        <View
+                          style={[
+                            styles.chartBarFill,
+                            { width: `${widthPct}%`, backgroundColor: color },
+                          ]}
+                        />
+                      </View>
+                      <Text style={styles.chartValue}>{value}</Text>
                     </View>
-                    <Text style={styles.chartValue}>{value}</Text>
+                  );
+                }
+                const barItem = item as {
+                  label: string;
+                  critere: string;
+                  indicateur: string;
+                  question: string;
+                  note: number;
+                  custom: boolean;
+                };
+                return (
+                  <View key={i} style={{ marginBottom: 8 }}>
+                    <Text style={styles.chartLabel}>
+                      {barItem.label}
+                      {barItem.custom ? " *" : ""}
+                    </Text>
+                    <Text style={styles.chartSubLabel}>
+                      Indicateur : {barItem.indicateur}
+                    </Text>
+                    <Text style={styles.chartSubLabel}>
+                      Question : {barItem.question.slice(0, 120)}
+                    </Text>
+                    <View style={styles.chartRow}>
+                      <View style={[styles.chartBarBg, { width: "85%" }]}>
+                        <View
+                          style={[
+                            styles.chartBarFill,
+                            { width: `${widthPct}%`, backgroundColor: color },
+                          ]}
+                        />
+                      </View>
+                      <Text style={styles.chartValue}>Note {value}/3</Text>
+                    </View>
                   </View>
                 );
               })}

@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { getEvaluationById } from "@/lib/api";
+import { getEvaluationById, getClientDisplayName } from "@/lib/api";
 import { getSeuil, seuilColorClass, isAdminRole } from "@/lib/scoring";
 import ScoreBadge from "@/components/ui-custom/ScoreBadge";
 import dynamic from "next/dynamic";
@@ -76,7 +76,7 @@ export default function EvaluationDetailPage() {
             ← Évaluations
           </Link>
           <h1 className="text-2xl font-bold text-gray-900 mt-2">
-            {evaluation.client?.nomEntreprise}
+            {getClientDisplayName(evaluation.client)}
           </h1>
           <p className="text-sm text-gray-500">
             {evaluation.questionnaire?.titre} — {evaluation.dateEvaluation}

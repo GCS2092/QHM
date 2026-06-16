@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Plus, Pencil, ChevronUp, ChevronDown } from "lucide-react";
 import ScoreBadge from "@/components/ui-custom/ScoreBadge";
 import EvaluationPdfButton from "@/components/evaluations/EvaluationPdfButton";
-import { getEvaluations, setApiAuthToken } from "@/lib/api";
+import { getEvaluations, setApiAuthToken, getClientDisplayName } from "@/lib/api";
 import type { Evaluation } from "@/lib/types";
 
 type SortBy = "client" | "date" | "score";
@@ -217,7 +217,7 @@ export default function EvaluationsPage() {
                       href={`/dashboard/evaluations/${e.id}`}
                       className="font-medium text-blue-600 hover:underline"
                     >
-                      {e.client?.nomEntreprise ?? "Client inconnu"}
+                      {getClientDisplayName(e.client)}
                     </Link>
                   </td>
                   <td className="px-6 py-4 text-gray-600">

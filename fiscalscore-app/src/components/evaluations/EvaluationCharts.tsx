@@ -22,22 +22,65 @@ function buildRadarData(evaluation: Evaluation) {
     add(critere, r.note);
   });
   return Array.from(byCritere.entries()).map(([critere, { total, count }]) => ({
-    critere: critere.length > 20 ? `${critere.slice(0, 18)}…` : critere,
+    critere: critere.length > 24 ? `${critere.slice(0, 22)}…` : critere,
+    critereFull: critere,
     score: Math.round((total / (count * 3)) * 100),
   }));
 }
 
-function buildBarData(evaluation: Evaluation) {
-  const rows: Array<{ label: string; note: number; custom: boolean }> = [];
+type BarRow = {
+  label: string;
+  critere: string;
+  indicateur: string;
+  question: string;
+  note: number;
+  custom: boolean;
+};
+
+function buildBarData(evaluation: Evaluation): BarRow[] {
+  const rows: BarRow[] = [];
   evaluation.reponses?.forEach((r, i) => {
-    const label = r.question?.texte ?? r.questionCustom?.texte ?? `Q${i + 1}`;
+    const q = r.question;
+    const cq = r.questionCustom;
+    const critere = q?.critere ?? cq?.critere ?? "—";
+    const indicateur = q?.indicateur ?? cq?.indicateur ?? "—";
+    const question = q?.texte ?? cq?.texte ?? `Question ${i + 1}`;
     rows.push({
-      label: label.length > 25 ? `${label.slice(0, 23)}…` : label,
+      label: `Q${i + 1}${critere !== "—" ? ` · ${critere.slice(0, 16)}` : ""}${critere.length > 16 ? "…" : ""}`,
+      critere,
+      indicateur,
+      question,
       note: r.note,
-      custom: Boolean(r.questionCustom),
+      custom: Boolean(cq),
     });
   });
   return rows;
+}
+
+function BarTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{ payload: BarRow }>;
+}) {
+  if (!active || !payload?.[0]) return null;
+  const row = payload[0].payload;
+  return (
+    <div className="max-w-xs rounded-lg border border-gray-200 bg-white p-3 text-xs shadow-lg">
+      <p className="font-semibold text-gray-900">
+        {row.critere}
+        {row.custom ? " *" : ""}
+      </p>
+      <p className="mt-1 text-gray-600">
+        <span className="font-medium">Indicateur :</span> {row.indicateur}
+      </p>
+      <p className="mt-1 text-gray-600">
+        <span className="font-medium">Question :</span> {row.question}
+      </p>
+      <p className="mt-2 font-semibold text-gray-900">Note : {row.note} / 3</p>
+    </div>
+  );
 }
 
 export function ScoreGauge({ pourcentage, type }: { pourcentage: number; type: QuestionnaireType }) {
@@ -69,6 +112,7 @@ export default function EvaluationCharts({ evaluation }: { evaluation: Evaluatio
   const type = evaluation.questionnaire?.type ?? 'planification';
   const radarData = buildRadarData(evaluation);
   const barData = buildBarData(evaluation);
+  const barHeight = Math.max(260, barData.length * 36);
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
@@ -93,6 +137,12 @@ export default function EvaluationCharts({ evaluation }: { evaluation: Evaluatio
                 <PolarGrid />
                 <PolarAngleAxis dataKey="critere" tick={{ fontSize: 10 }} />
                 <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 9 }} />
+                <Tooltip
+                  formatter={(value) => [`${value}%`, "Score critère"]}
+                  labelFormatter={(_, items) =>
+                    items?.[0]?.payload?.critereFull ?? ""
+                  }
+                />
                 <Radar dataKey="score" stroke="#2563eb" fill="#2563eb" fillOpacity={0.4} />
               </RadarChart>
             </ResponsiveContainer>
@@ -100,13 +150,13 @@ export default function EvaluationCharts({ evaluation }: { evaluation: Evaluatio
             <p className="text-sm text-gray-500 text-center py-12">Pas de données pour le radar</p>
           )
         ) : barData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={barData} layout="vertical" margin={{ left: 8, right: 8 }}>
+          <ResponsiveContainer width="100%" height={barHeight}>
+            <BarChart data={barData} layout="vertical" margin={{ left: 8, right: 16, top: 8, bottom: 8 }}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis type="number" domain={[0, 3]} />
-              <YAxis type="category" dataKey="label" width={100} tick={{ fontSize: 9 }} />
-              <Tooltip />
-              <Bar dataKey="note">
+              <XAxis type="number" domain={[0, 3]} ticks={[0, 1, 2, 3]} />
+              <YAxis type="category" dataKey="label" width={140} tick={{ fontSize: 9 }} />
+              <Tooltip content={<BarTooltip />} />
+              <Bar dataKey="note" radius={[0, 4, 4, 0]}>
                 {barData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={noteBarColor(entry.note)} />
                 ))}

@@ -1,4 +1,11 @@
-import { strapiGet, strapiPost, strapiPut, strapiDelete } from "./strapi";
+import {
+  strapiGet,
+  strapiPost,
+  strapiPut,
+  strapiPutFlat,
+  strapiPostFlat,
+  strapiDelete,
+} from "./strapi";
 import { getSeuil } from "./scoring";
 import type {
   AnalyticsSummary,
@@ -235,7 +242,7 @@ function normalizeEvaluation(item: unknown): Evaluation {
     evaluateurUtilisateurId,
     commentaireGlobal: rawItem?.commentaireGlobal ?? rawItem?.commentaire,
     commentaireConclusion: rawItem?.commentaireConclusion,
-    statut: rawItem?.statut ?? "terminee",
+    statut: rawItem?.statut ?? "en_cours",
     client: rawItem?.client ? normalizeClient(rawItem.client) : undefined,
     questionnaire: rawItem?.questionnaire
       ? normalizeQuestionnaire(rawItem.questionnaire)
@@ -341,7 +348,11 @@ export async function getQuestionnaires(
 ): Promise<Questionnaire[]> {
   const res = await strapiGet(
     "/questionnaires",
-    { populate: "*", sort: "titre:asc" },
+    {
+      "populate[questions]": "*",
+      "populate[evaluations]": "*",
+      sort: "titre:asc",
+    },
     token(tkn),
   );
   const rawData: unknown[] = Array.isArray(res.data)
@@ -356,7 +367,10 @@ export async function getQuestionnaireById(
 ): Promise<Questionnaire> {
   const res = await strapiGet(
     `/questionnaires/${id}`,
-    { populate: "*" },
+    {
+      "populate[questions]": "*",
+      "populate[evaluations]": "*",
+    },
     token(tkn),
   );
   return normalizeQuestionnaire(res?.data ?? {});
@@ -385,12 +399,8 @@ export async function getEvaluations(tkn?: string): Promise<Evaluation[]> {
   const res = await strapiGet(
     "/evaluations",
     {
-      "populate[client][fields][0]": "id",
-      "populate[client][fields][1]": "nomEntreprise",
-      "populate[client][fields][2]": "nomResponsable",
-      "populate[questionnaire][fields][0]": "id",
-      "populate[questionnaire][fields][1]": "titre",
-      "populate[questionnaire][fields][2]": "type",
+      "populate[client]": "*",
+      "populate[questionnaire]": "*",
       sort: "dateEvaluation:desc",
     },
     token(tkn),
@@ -408,45 +418,11 @@ export async function getEvaluationById(
   const res = await strapiGet(
     `/evaluations/${id}`,
     {
-      "populate[client][fields][0]": "id",
-      "populate[client][fields][1]": "nomEntreprise",
-      "populate[client][fields][2]": "nomResponsable",
-      "populate[client][fields][3]": "email",
-      "populate[client][fields][4]": "telephone",
-      "populate[client][fields][5]": "secteur",
-      "populate[questionnaire][fields][0]": "id",
-      "populate[questionnaire][fields][1]": "titre",
-      "populate[questionnaire][fields][2]": "type",
-      "populate[questionnaire][fields][3]": "description",
-      "populate[questionnaire][fields][4]": "actif",
-      "populate[questionnaire][populate][questions][fields][0]": "id",
-      "populate[questionnaire][populate][questions][fields][1]": "texte",
-      "populate[questionnaire][populate][questions][fields][2]": "critere",
-      "populate[questionnaire][populate][questions][fields][3]": "indicateur",
-      "populate[questionnaire][populate][questions][fields][4]": "ordre",
-      "populate[questionnaire][populate][questions][fields][5]":
-        "commentaireZero",
-      "populate[questionnaire][populate][questions][fields][6]":
-        "commentaireUn",
-      "populate[questionnaire][populate][questions][fields][7]":
-        "commentaireDeux",
-      "populate[questionnaire][populate][questions][fields][8]":
-        "commentaireTrois",
-      "populate[reponses][populate][question][fields][0]": "id",
-      "populate[reponses][populate][question][fields][1]": "texte",
-      "populate[reponses][populate][question][fields][2]": "critere",
-      "populate[reponses][populate][question][fields][3]": "indicateur",
-      "populate[reponses][populate][question][fields][4]": "ordre",
-      "populate[reponses][populate][questionCustom][fields][0]": "id",
-      "populate[reponses][populate][questionCustom][fields][1]": "texte",
-      "populate[reponses][populate][questionCustom][fields][2]": "critere",
-      "populate[reponses][populate][questionCustom][fields][3]": "indicateur",
-      "populate[reponses][populate][questionCustom][fields][4]": "ordre",
-      "populate[questions_custom][fields][0]": "id",
-      "populate[questions_custom][fields][1]": "texte",
-      "populate[questions_custom][fields][2]": "critere",
-      "populate[questions_custom][fields][3]": "indicateur",
-      "populate[questions_custom][fields][4]": "ordre",
+      "populate[client]": "*",
+      "populate[questionnaire][populate][questions]": "*",
+      "populate[reponses][populate][question]": "*",
+      "populate[reponses][populate][questionCustom]": "*",
+      "populate[questions_custom]": "*",
     },
     token(tkn),
   );
@@ -464,10 +440,8 @@ export async function getAnalyticsSummary(
     strapiGet(
       "/evaluations",
       {
-        "populate[client][fields][0]": "id",
-        "populate[client][fields][1]": "nomEntreprise",
-        "populate[questionnaire][fields][0]": "id",
-        "populate[questionnaire][fields][1]": "type",
+        "populate[client]": "*",
+        "populate[questionnaire]": "*",
         "fields[0]": "pourcentageScore",
         "fields[1]": "dateEvaluation",
         "fields[2]": "statut",
@@ -750,7 +724,7 @@ export async function updateUser(
   if (data.email) payload.email = data.email;
   if (data.password) payload.password = data.password;
 
-  return strapiPut(`/users/${id}`, payload, token(tkn));
+  return strapiPutFlat(`/users/${id}`, payload, token(tkn));
 }
 
 export async function createEvaluatorUser(
@@ -785,7 +759,12 @@ export async function createEvaluatorUser(
       })
     : null;
   const roleId = evaluatorRole?.id ?? evaluatorRole?.documentId;
-  return strapiPost(
+  if (!roleId) {
+    throw new Error(
+      "Rôle « évaluateur » introuvable dans Strapi. Lancez npm run seed:qhm dans fiscalscore-cms.",
+    );
+  }
+  return strapiPostFlat(
     "/users",
     {
       username: data.username,
@@ -796,6 +775,13 @@ export async function createEvaluatorUser(
     },
     token(tkn),
   );
+}
+
+/** Nom affichable du client (évite « Client inconnu » si populate partiel). */
+export function getClientDisplayName(client?: Client | null): string {
+  if (!client) return "Client inconnu";
+  const name = client.nomEntreprise?.trim();
+  return name || "Client inconnu";
 }
 
 // ─── QUESTIONS ───────────────────────────────────────────────────────────────

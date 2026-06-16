@@ -72,6 +72,52 @@ export async function strapiPost(path: string, data: unknown, token?: string) {
   return res.json();
 }
 
+/** POST sans enveloppe `{ data }` — requis pour `/users` (users-permissions). */
+export async function strapiPostFlat(
+  path: string,
+  data: Record<string, unknown>,
+  token?: string,
+) {
+  const res = await fetch(`${STRAPI_URL}/api${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(
+      `Strapi POST error: ${res.status} ${res.statusText} - ${text}`,
+    );
+  }
+  return res.json();
+}
+
+/** PUT sans enveloppe `{ data }` — requis pour `/users` (users-permissions). */
+export async function strapiPutFlat(
+  path: string,
+  data: Record<string, unknown>,
+  token?: string,
+) {
+  const res = await fetch(`${STRAPI_URL}/api${path}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(
+      `Strapi PUT error: ${res.status} ${res.statusText} - ${text}`,
+    );
+  }
+  return res.json();
+}
+
 export async function strapiPut(path: string, data: unknown, token?: string) {
   const res = await fetch(`${STRAPI_URL}/api${path}`, {
     method: "PUT",

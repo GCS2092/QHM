@@ -88,12 +88,16 @@ export default function SettingsPage() {
   async function handleCreateEvaluator(e: React.FormEvent) {
     e.preventDefault();
     setFeedback(null);
+    const tkn = (session?.user as { accessToken?: string })?.accessToken;
     try {
-      await createEvaluatorUser({
-        username: username.trim(),
-        email: email.trim(),
-        password,
-      });
+      await createEvaluatorUser(
+        {
+          username: username.trim(),
+          email: email.trim(),
+          password,
+        },
+        tkn,
+      );
       setFeedback("Compte évaluateur créé.");
       setUsername("");
       setEmail("");
@@ -109,10 +113,11 @@ export default function SettingsPage() {
   async function handleDeleteEvaluator() {
     if (!userToDelete) return;
     const { id, name } = userToDelete;
+    const tkn = (session?.user as { accessToken?: string })?.accessToken;
     setDeletingId(id);
     setFeedback(null);
     try {
-      await deleteUser(id);
+      await deleteUser(id, tkn);
       setFeedback(`Compte « ${name} » supprimé.`);
       await loadData();
     } catch (err: unknown) {
@@ -152,11 +157,16 @@ export default function SettingsPage() {
     if (!editingUser) return;
 
     setEditFeedback(null);
+    const tkn = (session?.user as { accessToken?: string })?.accessToken;
     try {
-      await updateUser(editingUser.id, {
-        email: editEmail.trim(),
-        password: editPassword.length > 0 ? editPassword : undefined,
-      });
+      await updateUser(
+        editingUser.id,
+        {
+          email: editEmail.trim(),
+          password: editPassword.length > 0 ? editPassword : undefined,
+        },
+        tkn,
+      );
       setEditFeedback("Évaluateur modifié avec succès.");
       closeEditModal();
       await loadData();

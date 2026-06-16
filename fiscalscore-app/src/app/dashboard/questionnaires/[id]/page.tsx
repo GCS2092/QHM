@@ -25,6 +25,7 @@ export default function QuestionnaireDetailPage() {
   const params = useParams();
   const id = String(params?.id ?? "");
   const { data: session } = useSession();
+  const token = (session?.user as { accessToken?: string })?.accessToken;
   const isAdmin = isAdminRole((session?.user as { role?: string })?.role);
   const [questionnaire, setQuestionnaire] = useState<Questionnaire | null>(
     null,
@@ -32,19 +33,20 @@ export default function QuestionnaireDetailPage() {
   const [loading, setLoading] = useState(true);
 
   const reload = useCallback(() => {
-    if (!id) return;
-    getQuestionnaireById(id)
+    if (!id || !token) return;
+    getQuestionnaireById(id, token)
       .then(setQuestionnaire)
       .catch(() => setQuestionnaire(null));
-  }, [id]);
+  }, [id, token]);
 
   useEffect(() => {
+    if (!id || !token) return;
     void (async () => {
       setLoading(true);
       await reload();
       setLoading(false);
     })();
-  }, [reload]);
+  }, [id, reload, token]);
 
   if (loading) return <div className="text-gray-500">Chargement...</div>;
   if (!questionnaire) {
@@ -116,10 +118,16 @@ export default function QuestionnaireDetailPage() {
                 <p className="text-sm text-gray-500">Aucune question.</p>
               ) : (
                 <ul className="space-y-2">
-                  {questions.map((q) => (
-                    <li key={q.id} className="rounded-lg border p-3 text-sm">
-                      <span className="font-medium">{q.critere}</span> —{" "}
-                      {q.texte}
+                  {questions.map((q, idx) => (
+                    <li key={q.id} className="rounded-lg border p-3 text-sm space-y-1">
+                      <div className="flex gap-2">
+                        <span className="text-xs text-gray-400">#{idx + 1}</span>
+                        <span className="font-medium text-gray-900">{q.critere ?? "—"}</span>
+                      </div>
+                      {q.indicateur ? (
+                        <p className="text-xs text-gray-500 pl-6">{q.indicateur}</p>
+                      ) : null}
+                      <p className="text-gray-700 pl-6">{q.texte}</p>
                     </li>
                   ))}
                 </ul>
