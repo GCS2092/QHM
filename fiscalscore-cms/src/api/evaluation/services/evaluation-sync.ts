@@ -1,6 +1,6 @@
 type ReponseInput = {
-  question?: number;
-  questionCustom?: number;
+  question?: number | string;
+  questionCustom?: number | string;
   note: number;
   commentaireEvaluateur?: string;
 };
@@ -24,12 +24,30 @@ async function recalculateEvaluationScores(strapi: any, evaluationId: number) {
   const scoreFinal = notes.reduce((sum: number, n: number) => sum + n, 0);
   const pourcentageScore =
     scoreMaxReel > 0 ? Math.round((scoreFinal / scoreMaxReel) * 100) : 0;
-
   await strapi.entityService.update('api::evaluation.evaluation', evaluationId, {
     data: { scoreFinal, scoreMaxReel, pourcentageScore },
   });
-
   return { scoreFinal, scoreMaxReel, pourcentageScore };
+}
+
+// Le front envoie des documentId (string, format Strapi v5) pour
+// "question" / "questionCustom" (voir normalizeQuestion dans api.ts),
+// mais entityService.create() attend un id numerique pour lier une
+// relation. Sans cette resolution, la relation ne se cree jamais et
+// reste silencieusement vide (c'etait le bug).
+async function resolveId(
+  strapi: any,
+  uid: string,
+  value?: number | string,
+): Promise<number | undefined> {
+  if (value === undefined || value === null || value === '') return undefined;
+  if (typeof value === 'number') return value;
+  if (/^\d+$/.test(value)) return Number(value);
+  const entity = await strapi.db.query(uid).findOne({
+    where: { documentId: value },
+    select: ['id'],
+  });
+  return entity?.id;
 }
 
 export async function syncEvaluationRelations(
@@ -77,14 +95,23 @@ export async function syncEvaluationRelations(
       commentaireEvaluateur: rep.commentaireEvaluateur,
       evaluation: evaluationId,
     };
-    if (rep.question) {
-      data.question = rep.question;
-    } else if (rep.questionCustom) {
-      data.questionCustom = rep.questionCustom;
+
+    const questionId = await resolveId(strapi, 'api::question.question', rep.question);
+    const questionCustomId = await resolveId(
+      strapi,
+      'api::question-custom.question-custom',
+      rep.questionCustom,
+    );
+
+    if (questionId) {
+      data.question = questionId;
+    } else if (questionCustomId) {
+      data.questionCustom = questionCustomId;
     } else if (customIdByOrder[customIdx]) {
       data.questionCustom = customIdByOrder[customIdx];
       customIdx += 1;
     }
+
     await strapi.entityService.create('api::reponse.reponse', { data });
   }
 
