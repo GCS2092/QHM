@@ -438,30 +438,12 @@ export async function getEvaluationById(
 ): Promise<Evaluation | null> {
   const res = await strapiGet(
     `/evaluations/${id}`,
-    {
-      "populate[client][fields][0]": "nomEntreprise",
-      "populate[client][fields][1]": "nomResponsable",
-      "populate[client][fields][2]": "email",
-      "populate[client][fields][3]": "telephone",
-      "populate[client][fields][4]": "secteur",
-      "populate[questionnaire][fields][0]": "titre",
-      "populate[questionnaire][fields][1]": "type",
-      "populate[questionnaire][populate][questions]": "true",
-      "populate[reponses][fields][0]": "note",
-      "populate[reponses][fields][1]": "commentaireEvaluateur",
-      "populate[reponses][populate][question]": "true",
-      "populate[reponses][populate][questionCustom]": "true",
-      "populate[questions_custom][fields][0]": "critere",
-      "populate[questions_custom][fields][1]": "indicateur",
-      "populate[questions_custom][fields][2]": "texte",
-      "populate[questions_custom][fields][3]": "ordre",
-    },
+    {},
     token(tkn),
   );
   if (!res?.data) return null;
   return normalizeEvaluation(res.data);
 }
-
 // ─── ANALYTICS ───────────────────────────────────────────────────────────────
 
 export async function getAnalyticsSummary(

@@ -34,7 +34,7 @@ export default function EvaluationPdfButton({
   useEffect(() => {
     if (initial) {
       // Si on a déjà les données, vérifie quand même qu'il y a un client
-      if (!initial.client) {
+      if (!initial.client || !initial.reponses?.[0]?.question) {
         console.warn("Données client manquantes dans l'initial");
         // Recharge pour avoir les données fraîches
         setLoading(true);

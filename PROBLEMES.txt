@@ -1,0 +1,36 @@
+ustom][fields][3]=ordre (183 ms) 200
+[2026-06-29 22:26:50.008] http: OPTIONS /api/evaluations/a96sfyi09ejfyed42is5rc1n (13 ms) 204
+[2026-06-29 22:26:50.145] error: select "t0".* from "public"."evaluations" as "t0" where ("t0"."id" = $1) limit $2 - syntaxe en entrée invalide pour le type integer : « a96sfyi09ejfyed42is5rc1n »
+error: select "t0".* from "public"."evaluations" as "t0" where ("t0"."id" = $1) limit $2 - syntaxe en entrée invalide pour le type integer : « a96sfyi09ejfyed42is5rc1n »
+    at parseErrorMessage (C:\QHM\QHM\QHM\fiscalscore-cms\node_modules\pg-protocol\dist\parser.js:305:11)
+    at Parser.handlePacket (C:\QHM\QHM\QHM\fiscalscore-cms\node_modules\pg-protocol\dist\parser.js:143:27)
+    at Parser.parse (C:\QHM\QHM\QHM\fiscalscore-cms\node_modules\pg-protocol\dist\parser.js:37:38)
+    at Socket.<anonymous> (C:\QHM\QHM\QHM\fiscalscore-cms\node_modules\pg-protocol\dist\index.js:11:42)
+    at Socket.emit (node:events:519:28)
+    at Socket.emit (node:domain:489:12)
+    at addChunk (node:internal/streams/readable:561:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+    at Readable.push (node:internal/streams/readable:392:5)
+    at TCP.onStreamRead (node:internal/stream_base_commons:189:23)
+[2026-06-29 22:26:50.148] http: PUT /api/evaluations/a96sfyi09ejfyed42is5rc1n (134 ms) 500
+0a-oc5blfeg50.js:1  PUT http://localhost:1337/api/evaluations/a96sfyi09ejfyed42is5rc1n 500 (Internal Server Error)
+s @ 0a-oc5blfeg50.js:1
+B @ 0a-oc5blfeg50.js:1
+O @ 0mzyvbnsv.z7~.js:1
+sJ @ 175g~rgg_-n5c.js:1
+(anonymous) @ 175g~rgg_-n5c.js:1
+tD @ 175g~rgg_-n5c.js:1
+s4 @ 175g~rgg_-n5c.js:1
+fz @ 175g~rgg_-n5c.js:1
+fT @ 175g~rgg_-n5c.js:1
+[NEW] Explain Console errors by using Copilot in Edge: click  to explain an error. Learn moreDon't show again
+0a-oc5blfeg50.js:1  PUT http://localhost:1337/api/evaluations/a96sfyi09ejfyed42is5rc1n 500 (Internal Server Error)
+s @ 0a-oc5blfeg50.js:1
+B @ 0a-oc5blfeg50.js:1
+O @ 0mzyvbnsv.z7~.js:1
+sJ @ 175g~rgg_-n5c.js:1
+(anonymous) @ 175g~rgg_-n5c.js:1
+tD @ 175g~rgg_-n5c.js:1
+s4 @ 175g~rgg_-n5c.js:1
+fz @ 175g~rgg_-n5c.js:1
+fT @ 175g~rgg_-n5c.js:1

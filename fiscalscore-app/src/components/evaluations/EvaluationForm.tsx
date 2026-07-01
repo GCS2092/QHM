@@ -92,7 +92,10 @@ export default function EvaluationForm({
         if (!isEditMode && !selectedQuestionnaire && activeQ.length)
           setSelectedQuestionnaire(String(activeQ[0].id));
       })
-      .catch(() => {});
+      .catch((err: Error) => {
+        console.error("❌ Erreur chargement clients/questionnaires:", err.message);
+        toast.error("Erreur de chargement : " + err.message);
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionReady]);
 
@@ -144,7 +147,8 @@ export default function EvaluationForm({
           };
         });
         setResponses(init);
-      } catch {
+      } catch (err) {
+        console.error("❌ Erreur chargement évaluation:", err);
         router.push("/dashboard/evaluations");
       } finally {
         setLoadingEdit(false);
@@ -174,7 +178,10 @@ export default function EvaluationForm({
         setResponses(init);
         setServerEvalId(null);
       })
-      .catch(() => {});
+      .catch((err: Error) => {
+        console.error("❌ Erreur chargement questionnaire:", err.message);
+        toast.error("Impossible de charger le questionnaire : " + err.message);
+      });
     return () => {
       mounted = false;
     };
@@ -277,7 +284,7 @@ export default function EvaluationForm({
 
       if (!serverEvalId) {
         const res = await createEvaluation(payload);
-        const createdId = res?.data?.id ?? res?.id ?? null;
+        const createdId = res?.data?.documentId ?? res?.data?.id ?? res?.documentId ?? res?.id ?? null;
         if (createdId) setServerEvalId(createdId);
         if (draft) {
           toast.success("Évaluation enregistrée automatiquement");

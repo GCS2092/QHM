@@ -12,9 +12,23 @@ type CustomQuestionInput = {
   ordre?: number;
 };
 
-async function recalculateEvaluationScores(strapi: any, evaluationId: number) {
+// Résout un evaluationId qui peut être soit un id numérique soit un documentId string
+async function resolveEvaluationNumericId(strapi: any, evaluationId: number | string): Promise<number> {
+  if (typeof evaluationId === 'number') return evaluationId;
+  if (/^\d+$/.test(String(evaluationId))) return Number(evaluationId);
+  // C'est un documentId string → résoudre l'id numérique
+  const entity = await strapi.db.query('api::evaluation.evaluation').findOne({
+    where: { documentId: evaluationId },
+    select: ['id'],
+  });
+  if (!entity?.id) throw new Error(`Evaluation introuvable pour documentId: ${evaluationId}`);
+  return entity.id;
+}
+
+async function recalculateEvaluationScores(strapi: any, evaluationId: number | string) {
+  const numericId = await resolveEvaluationNumericId(strapi, evaluationId);
   const reponses = await strapi.entityService.findMany('api::reponse.reponse', {
-    filters: { evaluation: evaluationId },
+    filters: { evaluation: numericId },
     fields: ['note'],
   });
   const notes = (reponses ?? [])
@@ -24,17 +38,12 @@ async function recalculateEvaluationScores(strapi: any, evaluationId: number) {
   const scoreFinal = notes.reduce((sum: number, n: number) => sum + n, 0);
   const pourcentageScore =
     scoreMaxReel > 0 ? Math.round((scoreFinal / scoreMaxReel) * 100) : 0;
-  await strapi.entityService.update('api::evaluation.evaluation', evaluationId, {
+  await strapi.entityService.update('api::evaluation.evaluation', numericId, {
     data: { scoreFinal, scoreMaxReel, pourcentageScore },
   });
   return { scoreFinal, scoreMaxReel, pourcentageScore };
 }
 
-// Le front envoie des documentId (string, format Strapi v5) pour
-// "question" / "questionCustom" (voir normalizeQuestion dans api.ts),
-// mais entityService.create() attend un id numerique pour lier une
-// relation. Sans cette resolution, la relation ne se cree jamais et
-// reste silencieusement vide (c'etait le bug).
 async function resolveId(
   strapi: any,
   uid: string,
@@ -52,14 +61,16 @@ async function resolveId(
 
 export async function syncEvaluationRelations(
   strapi: any,
-  evaluationId: number,
+  evaluationId: number | string,
   payload: {
     reponses?: ReponseInput[];
     questions_custom?: CustomQuestionInput[];
   }
 ) {
+  const numericId = await resolveEvaluationNumericId(strapi, evaluationId);
+
   const existingReponses = await strapi.entityService.findMany('api::reponse.reponse', {
-    filters: { evaluation: evaluationId },
+    filters: { evaluation: numericId },
     fields: ['id'],
   });
   for (const r of existingReponses) {
@@ -67,7 +78,7 @@ export async function syncEvaluationRelations(
   }
 
   const existingCustom = await strapi.entityService.findMany('api::question-custom.question-custom', {
-    filters: { evaluation: evaluationId },
+    filters: { evaluation: numericId },
     fields: ['id'],
   });
   for (const c of existingCustom) {
@@ -82,7 +93,7 @@ export async function syncEvaluationRelations(
         indicateur: cq.indicateur,
         texte: cq.texte,
         ordre: cq.ordre ?? idx + 1,
-        evaluation: evaluationId,
+        evaluation: numericId,
       },
     });
     customIdByOrder.push(created.id);
@@ -93,7 +104,7 @@ export async function syncEvaluationRelations(
     const data: Record<string, unknown> = {
       note: rep.note,
       commentaireEvaluateur: rep.commentaireEvaluateur,
-      evaluation: evaluationId,
+      evaluation: numericId,
     };
 
     const questionId = await resolveId(strapi, 'api::question.question', rep.question);
@@ -116,7 +127,7 @@ export async function syncEvaluationRelations(
   }
 
   if (payload.reponses !== undefined) {
-    await recalculateEvaluationScores(strapi, evaluationId);
+    await recalculateEvaluationScores(strapi, numericId);
   }
 }
 

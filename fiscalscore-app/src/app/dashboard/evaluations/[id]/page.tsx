@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { getEvaluationById, getClientDisplayName } from "@/lib/api";
+import { getEvaluationById, getClientDisplayName, setApiAuthToken } from "@/lib/api";
 import { getSeuil, seuilColorClass, isAdminRole } from "@/lib/scoring";
 import ScoreBadge from "@/components/ui-custom/ScoreBadge";
 import dynamic from "next/dynamic";
@@ -25,26 +25,28 @@ export default function EvaluationDetailPage() {
   const params = useParams();
   const id = String(params?.id ?? "");
   const { data: session } = useSession();
-  const token = (session?.user as { accessToken?: string })?.accessToken;
   const isAdmin = isAdminRole((session?.user as { role?: string })?.role);
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
   const [loading, setLoading] = useState(true);
 
   const reload = useCallback(() => {
     if (!id) return;
-    getEvaluationById(id, token)
+    // ✅ Injecter le token AVANT chaque appel Strapi
+    const tok = (session?.user as { accessToken?: string })?.accessToken;
+    setApiAuthToken(tok);
+    getEvaluationById(id, tok)
       .then(setEvaluation)
       .catch(() => setEvaluation(null));
-  }, [id, token]);
+  }, [id, session]);
 
   useEffect(() => {
-    if (!id || !token) return;
+    if (!id) return;
     void (async () => {
       setLoading(true);
       await reload();
       setLoading(false);
     })();
-  }, [id, reload, token]);
+  }, [id, reload]);
 
   if (loading) return <div className="text-gray-500">Chargement...</div>;
   if (!evaluation) {

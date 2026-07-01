@@ -2,21 +2,23 @@ import { factories } from '@strapi/strapi';
 import { isApiAdmin } from '../../../utils/roles';
 import { syncEvaluationRelations } from '../services/evaluation-sync';
 
-interface EvaluationPopulated {
-  id: number;
-  statut?: 'en_cours' | 'terminee';
-  evaluateur?: string;
-  evaluateurUtilisateur?: { id: number } | number | null;
-  client?: { id: number } | number | null;
-  questionnaire?: { id: number } | number | null;
-  [key: string]: any;
+function extractId(val: any): number | null {
+  if (val == null) return null;
+  if (typeof val === 'object') return val.id ?? null;
+  return typeof val === 'number' ? val : null;
 }
 
-function extractId(val: { id: number } | number | null | undefined): number | null {
-  if (val == null) return null;
-  if (typeof val === 'object') return val.id;
-  return val;
-}
+const FULL_POPULATE = {
+  client: true,
+  questionnaire: true,
+  questions_custom: true,
+  reponses: {
+    populate: {
+      question: true,
+      questionCustom: true,
+    },
+  },
+} as any;
 
 export default factories.createCoreController('api::evaluation.evaluation' as any, ({ strapi }) => ({
   async find(ctx) {
@@ -26,7 +28,7 @@ export default factories.createCoreController('api::evaluation.evaluation' as an
         filters: { evaluateur: user.id },
         populate: ['client'],
       });
-      const clientIds = assigns.map((a: any) => a.client?.id).filter(Boolean);
+      const clientIds = (assigns as any[]).map((a: any) => a.client?.id).filter(Boolean);
       if (clientIds.length === 0) {
         return this.transformResponse([], ctx);
       }
@@ -49,24 +51,34 @@ export default factories.createCoreController('api::evaluation.evaluation' as an
   },
 
   async findOne(ctx) {
-    const res = await super.findOne(ctx);
     const user = ctx.state.user;
+    const documentId = ctx.params.id;
+
+    const populated: any = await strapi.documents('api::evaluation.evaluation').findOne({
+      documentId,
+      populate: FULL_POPULATE,
+    });
+
+    if (!populated) return ctx.notFound();
+
     if (user && !isApiAdmin(user)) {
-      const evalData = res?.data;
-      const clientId = evalData?.client?.id ?? evalData?.client;
+      const clientId = populated?.client?.id ?? populated?.client;
       if (!clientId) return ctx.notFound();
+
       const assigns = await strapi.entityService.findMany('api::assignation.assignation', {
         filters: { evaluateur: user.id, client: clientId },
       });
-      if (!assigns?.length) return ctx.notFound();
-      const evalUserId = evalData?.evaluateurUtilisateur?.id ?? evalData?.evaluateurUtilisateur;
+      if (!(assigns as any[])?.length) return ctx.notFound();
+
+      const evalUserId = extractId(populated?.evaluateurUtilisateur);
       const owns =
         evalUserId === user.id ||
-        evalData?.evaluateur === user.username ||
-        evalData?.evaluateur === user.email;
+        populated?.evaluateur === user.username ||
+        populated?.evaluateur === user.email;
       if (!owns) return ctx.notFound();
     }
-    return res;
+
+    return this.transformResponse(populated, ctx);
   },
 
   async create(ctx) {
@@ -80,12 +92,12 @@ export default factories.createCoreController('api::evaluation.evaluation' as an
       const assigns = await strapi.entityService.findMany('api::assignation.assignation', {
         filters: { evaluateur: user.id, client: clientId },
       });
-      if (!assigns?.length) return ctx.forbidden('Client non assigné');
+      if (!(assigns as any[])?.length) return ctx.forbidden('Client non assigné');
       evalData.evaluateurUtilisateur = user.id;
       evalData.evaluateur = evalData.evaluateur || user.username || user.email;
     }
 
-    const created = await strapi.entityService.create('api::evaluation.evaluation', {
+    const created: any = await strapi.documents('api::evaluation.evaluation').create({
       data: {
         ...evalData,
         client: evalData.client?.id ?? evalData.client,
@@ -94,29 +106,30 @@ export default factories.createCoreController('api::evaluation.evaluation' as an
       },
     });
 
-    await syncEvaluationRelations(strapi, Number(created.id), { reponses, questions_custom });
+    await syncEvaluationRelations(strapi, created.documentId ?? created.id, { reponses, questions_custom });
 
-    const populated = await strapi.entityService.findOne('api::evaluation.evaluation', created.id, {
-      populate: ['client', 'questionnaire', 'reponses', 'reponses.question', 'reponses.questionCustom', 'questions_custom'],
+    const populatedCreate: any = await strapi.documents('api::evaluation.evaluation').findOne({
+      documentId: created.documentId,
+      populate: FULL_POPULATE,
     });
 
-    return this.transformResponse({ data: populated }, ctx);
+    return this.transformResponse(populatedCreate, ctx);
   },
 
   async update(ctx) {
     const user = ctx.state.user;
-    const id = ctx.params.id;
+    const documentId = ctx.params.id;
 
-    const existing = (await strapi.entityService.findOne('api::evaluation.evaluation', id, {
-      populate: ['evaluateurUtilisateur'],
-    })) as EvaluationPopulated | null;
+    const existing: any = await strapi.documents('api::evaluation.evaluation').findOne({
+      documentId,
+      populate: { evaluateurUtilisateur: true } as any,
+    });
 
     if (!existing) return ctx.notFound();
 
     const body = ctx.request.body?.data ?? ctx.request.body ?? {};
     const { reponses, questions_custom, ...evalData } = body;
 
-    // On extrait statut une seule fois depuis le type castée
     const existingStatut = existing.statut as 'en_cours' | 'terminee' | undefined;
 
     if (user && !isApiAdmin(user)) {
@@ -131,12 +144,12 @@ export default factories.createCoreController('api::evaluation.evaluation' as an
       if (!owns) return ctx.forbidden();
     }
 
-    // Double-vérif : même logique, même variable typée
     if (existingStatut === 'terminee' && user && !isApiAdmin(user)) {
       return ctx.forbidden('Évaluation terminée');
     }
 
-    await strapi.entityService.update('api::evaluation.evaluation', id, {
+    await strapi.documents('api::evaluation.evaluation').update({
+      documentId,
       data: {
         ...evalData,
         client: evalData.client?.id ?? evalData.client,
@@ -145,14 +158,15 @@ export default factories.createCoreController('api::evaluation.evaluation' as an
     });
 
     if (reponses !== undefined || questions_custom !== undefined) {
-      await syncEvaluationRelations(strapi, Number(id), { reponses, questions_custom });
+      await syncEvaluationRelations(strapi, existing.documentId ?? existing.id, { reponses, questions_custom });
     }
 
-    const populated = await strapi.entityService.findOne('api::evaluation.evaluation', id, {
-      populate: ['client', 'questionnaire', 'reponses', 'reponses.question', 'reponses.questionCustom', 'questions_custom'],
+    const populatedUpdate: any = await strapi.documents('api::evaluation.evaluation').findOne({
+      documentId,
+      populate: FULL_POPULATE,
     });
 
-    return this.transformResponse({ data: populated }, ctx);
+    return this.transformResponse(populatedUpdate, ctx);
   },
 
   async delete(ctx) {

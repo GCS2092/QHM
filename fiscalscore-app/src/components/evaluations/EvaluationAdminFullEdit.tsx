@@ -92,8 +92,6 @@ export default function EvaluationAdminFullEdit({
     setSaving(true);
     setMsg(null);
     try {
-      // ✅ Fix : exclure les réponses sans question ni questionCustom (évite le 500)
-      // et ne pas inclure les clés undefined dans le payload
       const reponses = rows
         .filter((r) => r.questionId || r.questionCustomId)
         .map((r) => ({
@@ -110,16 +108,22 @@ export default function EvaluationAdminFullEdit({
         ordre: cq.ordre,
       }));
 
-      await updateEvaluation(evaluation.id, {
+      // ✅ Fix : ne jamais envoyer reponses vides (évite l'effacement des données)
+      const payload: any = {
         commentaireGlobal,
         commentaireConclusion,
-        statut: "terminee",
+        statut: "terminee" as const,
         scoreFinal: scoreComputed.scoreObtained,
         scoreMaxReel: scoreComputed.scoreMaxReel,
         pourcentageScore: scoreComputed.pourcentage,
-        reponses,
-        questions_custom,
-      });
+      };
+
+      if (reponses.length > 0) {
+        payload.reponses = reponses;
+        payload.questions_custom = questions_custom;
+      }
+
+      await updateEvaluation(evaluation.id, payload);
       setMsg("Évaluation mise à jour (notes et scores recalculés).");
       onSaved();
     } catch (e: unknown) {
@@ -158,33 +162,41 @@ export default function EvaluationAdminFullEdit({
             </tr>
           </thead>
           <tbody className="divide-y">
-            {rows.map((row) => (
-              <tr key={row.key}>
-                <td className="px-3 py-2">
-                  <div className="font-medium text-gray-800">{row.critere || "—"}</div>
-                  <div className="text-xs text-gray-500">{row.label}</div>
-                </td>
-                <td className="px-3 py-2">
-                  <select
-                    value={row.note}
-                    onChange={(e) => updateRow(row.key, { note: Number(e.target.value) })}
-                    className="w-full rounded border px-2 py-1 text-sm"
-                  >
-                    {[0, 1, 2, 3].map((n) => (
-                      <option key={n} value={n}>{n}</option>
-                    ))}
-                  </select>
-                </td>
-                <td className="px-3 py-2 text-xs text-gray-500 max-w-[140px]">{row.autoComment ?? "—"}</td>
-                <td className="px-3 py-2">
-                  <input
-                    value={row.commentaireEvaluateur ?? ""}
-                    onChange={(e) => updateRow(row.key, { commentaireEvaluateur: e.target.value })}
-                    className="w-full rounded border px-2 py-1 text-sm"
-                  />
+            {rows.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="px-3 py-4 text-center text-gray-400 text-xs">
+                  Aucune réponse à afficher. Les données seront conservées lors de la sauvegarde.
                 </td>
               </tr>
-            ))}
+            ) : (
+              rows.map((row) => (
+                <tr key={row.key}>
+                  <td className="px-3 py-2">
+                    <div className="font-medium text-gray-800">{row.critere || "—"}</div>
+                    <div className="text-xs text-gray-500">{row.label}</div>
+                  </td>
+                  <td className="px-3 py-2">
+                    <select
+                      value={row.note}
+                      onChange={(e) => updateRow(row.key, { note: Number(e.target.value) })}
+                      className="w-full rounded border px-2 py-1 text-sm"
+                    >
+                      {[0, 1, 2, 3].map((n) => (
+                        <option key={n} value={n}>{n}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="px-3 py-2 text-xs text-gray-500 max-w-[140px]">{row.autoComment ?? "—"}</td>
+                  <td className="px-3 py-2">
+                    <input
+                      value={row.commentaireEvaluateur ?? ""}
+                      onChange={(e) => updateRow(row.key, { commentaireEvaluateur: e.target.value })}
+                      className="w-full rounded border px-2 py-1 text-sm"
+                    />
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

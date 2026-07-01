@@ -34,7 +34,6 @@ export default function ClientDetail({ clientId }: { clientId: string }) {
   const userId = (session?.user as { id?: string })?.id ?? "";
   const userName = session?.user?.name ?? "";
 
-  // ✅ Correct — types séparés
   type ClientWithEvals = (Client & { evaluations?: Evaluation[] }) | null;
   type AssignationMap = Record<string, number | string>;
   type EvaluatorItem = { id: number | string; username: string };
@@ -54,8 +53,11 @@ export default function ClientDetail({ clientId }: { clientId: string }) {
   });
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
+  // ✅ CORRIGÉ : reload lit le token depuis session au moment de l'appel
+  // et vérifie que clientId est défini avant de fetch
   async function reload() {
     const tkn = (session?.user as { accessToken?: string })?.accessToken;
+    if (!tkn || !clientId) return;
     const c = await getClientById(clientId, tkn);
     setClient(c);
     if (c) {
@@ -81,9 +83,12 @@ export default function ClientDetail({ clientId }: { clientId: string }) {
 
   useEffect(() => {
     let cancelled = false;
+    const tkn = (session?.user as { accessToken?: string })?.accessToken;
+
+    // ✅ CORRIGÉ : ne pas lancer si la session n'est pas encore chargée
+    if (!tkn) return;
 
     const load = async () => {
-      const tkn = (session?.user as { accessToken?: string })?.accessToken;
       if (!cancelled) setLoading(true);
       await Promise.all([
         reload(),
@@ -103,7 +108,7 @@ export default function ClientDetail({ clientId }: { clientId: string }) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clientId, isAdmin]);
+  }, [clientId, isAdmin, session]); // ✅ CORRIGÉ : session ajouté aux dépendances
 
   const evaluations = isAdmin
     ? (client?.evaluations ?? [])

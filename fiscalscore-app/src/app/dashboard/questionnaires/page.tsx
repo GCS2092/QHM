@@ -3,11 +3,11 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { FileText, Plus, Eye, Edit, Trash2 } from "lucide-react";
-import { getQuestionnaires, deleteQuestionnaire } from "@/lib/api";
+import { getQuestionnaires, deleteQuestionnaire, setApiAuthToken } from "@/lib/api";
 import type { Questionnaire } from "@/lib/types";
 
 export default function QuestionnairesPage() {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -15,13 +15,18 @@ export default function QuestionnairesPage() {
 
   useEffect(() => {
     if (status !== "authenticated") return;
+
+    // ✅ Injecter le token JWT avant d'appeler Strapi
+    const token = (session?.user as { accessToken?: string })?.accessToken;
+    setApiAuthToken(token);
+
     getQuestionnaires()
       .then(setQuestionnaires)
       .catch((err) =>
         setError(err.message || "Impossible de charger les questionnaires"),
       )
       .finally(() => setLoading(false));
-  }, [status]);
+  }, [session, status]);
 
   const availableCount = useMemo(() => questionnaires.length, [questionnaires]);
 
@@ -87,10 +92,7 @@ export default function QuestionnairesPage() {
           <tbody className="divide-y divide-gray-50">
             {loading ? (
               <tr>
-                <td
-                  colSpan={5}
-                  className="px-6 py-10 text-center text-gray-500"
-                >
+                <td colSpan={5} className="px-6 py-10 text-center text-gray-500">
                   Chargement des questionnaires...
                 </td>
               </tr>
@@ -102,10 +104,7 @@ export default function QuestionnairesPage() {
               </tr>
             ) : questionnaires.length === 0 ? (
               <tr>
-                <td
-                  colSpan={5}
-                  className="px-6 py-10 text-center text-gray-400"
-                >
+                <td colSpan={5} className="px-6 py-10 text-center text-gray-400">
                   Aucun questionnaire trouvé
                 </td>
               </tr>
