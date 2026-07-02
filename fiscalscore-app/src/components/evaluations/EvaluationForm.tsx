@@ -241,14 +241,12 @@ export default function EvaluationForm({
     setSaving(true);
     try {
       const baseReponses = Object.entries(responses)
-        .filter(
-          ([key, r]) => key.startsWith("q_") && r.note !== null && r.questionId,
-        )
-        .map(([, r]) => ({
-          question: Number(r.questionId),
-          note: Number(r.note),
-          commentaireEvaluateur: r.commentaireEvaluateur,
-        }));
+  .filter(([key, r]) => key.startsWith("q_") && r.note !== null && r.questionId)
+  .map(([, r]) => ({
+    question: r.questionId, // ← garder le documentId string, pas Number()
+    note: Number(r.note),
+    commentaireEvaluateur: r.commentaireEvaluateur,
+  }));
 
       const customReponses = Object.entries(responses)
         .filter(([key, r]) => key.startsWith("c_") && r.note !== null)
